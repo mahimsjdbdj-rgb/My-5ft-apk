@@ -1,4 +1,134 @@
 <!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5ft HTML TO APK</title>
+    <style>
+        :root {
+            --bg: #0b1120;
+            --card: #1e293b;
+            --accent: #10b981;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --border: #334155;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 14px; max-width: 550px; margin: 0 auto; }
+        
+        .topbar {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--card); padding: 14px 16px; border-radius: 14px;
+            border: 1px solid var(--border); margin-bottom: 14px;
+        }
+        .brand { display: flex; align-items: center; gap: 10px; }
+        .logo {
+            width: 40px; height: 40px; border-radius: 10px;
+            background: linear-gradient(135deg, #10b981, #047857);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; color: #fff; font-size: 15px;
+        }
+        .brand h1 { font-size: 17px; }
+        .brand p { font-size: 11px; color: var(--muted); }
+        .settings-btn {
+            background: #334155; color: #fff; border: none; padding: 8px 12px;
+            border-radius: 8px; font-size: 12px; cursor: pointer;
+        }
+
+        .card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 14px; padding: 16px; margin-bottom: 14px;
+        }
+        .card h2 { font-size: 14px; color: var(--accent); margin-bottom: 12px; }
+        .field { margin-bottom: 12px; }
+        label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+        input[type="text"], input[type="password"], textarea {
+            width: 100%; background: #0f172a; border: 1px solid var(--border);
+            color: #fff; padding: 10px 12px; border-radius: 8px; font-size: 13px; outline: none;
+        }
+        input:focus, textarea:focus { border-color: var(--accent); }
+        textarea { height: 200px; font-family: monospace; resize: vertical; }
+
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn {
+            width: 100%; padding: 12px; border: none; border-radius: 10px;
+            font-weight: 600; font-size: 14px; cursor: pointer; color: #fff;
+        }
+        .btn-preview { background: #3b82f6; }
+        .btn-build { background: var(--accent); }
+        .btn-save { background: #8b5cf6; margin-top: 8px; }
+
+        #statusBox {
+            display: none; margin-top: 12px; padding: 12px; border-radius: 8px;
+            background: #064e3b; color: #a7f3d0; font-size: 13px; line-height: 1.5;
+            word-break: break-all;
+        }
+        .download-link {
+            display: inline-block; margin-top: 8px; background: #fff; color: #064e3b;
+            padding: 8px 14px; border-radius: 6px; font-weight: bold; text-decoration: none;
+        }
+        #settingsPanel { display: none; }
+        .modal {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            z-index: 100; padding: 16px; flex-direction: column;
+        }
+        .modal-top {
+            background: #1e293b; padding: 10px 14px; border-radius: 12px 12px 0 0;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        iframe { flex: 1; width: 100%; background: #fff; border: none; border-radius: 0 0 12px 12px; }
+    </style>
+</head>
+<body>
+
+    <div class="topbar">
+        <div class="brand">
+            <div class="logo">5ft</div>
+            <div>
+                <h1>5ft HTML TO APK</h1>
+                <p>One-Click Direct APK Builder</p>
+            </div>
+        </div>
+        <button class="settings-btn" onclick="toggleSettings()">⚙️ ওয়ান-টাইম সেটআপ</button>
+    </div>
+
+    <!-- সেটিংস প্যানেল -->
+    <div class="card" id="settingsPanel">
+        <h2>১ বারের ইঞ্জিন সেটআপ (ফোনে সেভ থাকবে)</h2>
+        <div class="field">
+            <label>GitHub Username</label>
+            <input type="text" id="ghUser" placeholder="যেমন: mahimsjdbdj-rgb">
+        </div>
+        <div class="field">
+            <label>Repository Name</label>
+            <input type="text" id="ghRepo" placeholder="যেমন: My-5ft-apk">
+        </div>
+        <div class="field">
+            <label>GitHub Personal Access Token</label>
+            <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx">
+        </div>
+        <button class="btn btn-save" onclick="saveConfig()">সেভ করুন (Save Forever)</button>
+    </div>
+
+    <div class="card">
+        <h2>অ্যাপ কনফিগারেশন</h2>
+        <div class="row">
+            <div class="field">
+                <label>অ্যাপের নাম (App Name)</label>
+                <input type="text" id="appName" value="My 5ft App">
+            </div>
+            <div class="field">
+                <label>প্যাকেজ নেম (Package ID)</label>
+                <input type="text" id="pkgName" value="com.fiveft.myapp">
+            </div>
+        </div>
+        <div class="field">
+            <label>HTML ফাইল সিলেক্ট করুন (অথবা নিচে কোড পেস্ট করুন)</label>
+            <input type="file" accept=".html,.htm" onchange="loadHtmlFile(event)">
+        </div>
+        <div class="field">
+            <label>HTML কোড</label>
+            <textarea id="htmlCode"><!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,5 +139,126 @@
 <body>
   <h1>আমার তৈরি অ্যাপ!</h1>
   <p>Powered by 5ft HTML TO APK</p>
+</body>
+</html></textarea>
+        </div>
+
+        <div class="row">
+            <button class="btn btn-preview" onclick="showPreview()">📱 প্রিভিউ দেখুন</button>
+            <button class="btn btn-build" onclick="startCloudBuild()">🚀 Build APK</button>
+        </div>
+
+        <div id="statusBox"></div>
+    </div>
+
+    <div class="modal" id="previewModal">
+        <div class="modal-top">
+            <span id="prevTitle">Live Preview</span>
+            <button onclick="document.getElementById('previewModal').style.display='none'" style="background:#ef4444;color:#fff;border:none;padding:5px 10px;border-radius:6px;">বন্ধ করুন</button>
+        </div>
+        <iframe id="prevFrame"></iframe>
+    </div>
+
+    <script>
+        window.onload = () => {
+            document.getElementById('ghUser').value = localStorage.getItem('5ft_user') || '';
+            document.getElementById('ghRepo').value = localStorage.getItem('5ft_repo') || '';
+            document.getElementById('ghToken').value = localStorage.getItem('5ft_token') || '';
+        };
+
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function saveConfig() {
+            localStorage.setItem('5ft_user', document.getElementById('ghUser').value.trim());
+            localStorage.setItem('5ft_repo', document.getElementById('ghRepo').value.trim());
+            localStorage.setItem('5ft_token', document.getElementById('ghToken').value.trim());
+            alert('সেটআপ সেভ হয়েছে!');
+            toggleSettings();
+        }
+
+        function loadHtmlFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => document.getElementById('htmlCode').value = ev.target.result;
+            reader.readAsText(file);
+        }
+
+        function showPreview() {
+            document.getElementById('prevTitle').innerText = document.getElementById('appName').value;
+            document.getElementById('prevFrame').srcdoc = document.getElementById('htmlCode').value;
+            document.getElementById('previewModal').style.display = 'flex';
+        }
+
+        async function uploadToGithub(user, repo, token, path, contentStr, message) {
+            const url = `https://api.github.com/repos/${user}/${repo}/contents/${path}`;
+            let sha = null;
+            
+            // mode: 'cors' যুক্ত করা হয়েছে যাতে লোকাল ফাইল থেকে রিকোয়েস্টে কোনো বাধা না আসে
+            const check = await fetch(url, { 
+                method: 'GET',
+                mode: 'cors',
+                headers: { 'Authorization': `token ${token}` } 
+            });
+            if (check.ok) {
+                const data = await check.json();
+                sha = data.sha;
+            }
+            const encoded = btoa(unescape(encodeURIComponent(contentStr)));
+            const body = { message, content: encoded };
+            if (sha) body.sha = sha;
+
+            const res = await fetch(url, {
+                method: 'PUT',
+                mode: 'cors',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+            if (!res.ok) throw new Error('GitHub সংযোগ ব্যর্থ হয়েছে। টোকেন বা রিপোজিটরি নাম চেক করুন।');
+        }
+
+        async function startCloudBuild() {
+            const user = localStorage.getItem('5ft_user');
+            const repo = localStorage.getItem('5ft_repo');
+            const token = localStorage.getItem('5ft_token');
+            const status = document.getElementById('statusBox');
+
+            if (!user || !repo || !token) {
+                alert('অনুগ্রহ করে প্রথমে উপরে "⚙️ ওয়ান-টাইম সেটআপ" থেকে আপনার GitHub তথ্য দিন।');
+                toggleSettings();
+                return;
+            }
+
+            const appName = document.getElementById('appName').value.trim() || 'My5ftApp';
+            const pkgName = document.getElementById('pkgName').value.trim() || 'com.fiveft.app';
+            const htmlCode = document.getElementById('htmlCode').value;
+
+            status.style.display = 'block';
+            status.innerHTML = '⏳ আপনার কোড বিল্ড সার্ভারে পাঠানো হচ্ছে...';
+
+            try {
+                await uploadToGithub(user, repo, token, 'app_html/index.html', htmlCode, 'Update HTML');
+                
+                const configData = JSON.stringify({ appName, pkgName, time: Date.now() }, null, 2);
+                await uploadToGithub(user, repo, token, 'app_html/config.json', configData, 'Trigger APK Build');
+
+                const releaseUrl = `https://github.com/${user}/${repo}/releases/latest/download/app-release.apk`;
+                const actionsUrl = `https://github.com/${user}/${repo}/actions`;
+
+                status.innerHTML = `✅ <b>অ্যাপ বিল্ড সফলভাবে শুরু হয়েছে!</b><br><br>
+                ১-২ মিনিটের মধ্যে APK তৈরি হয়ে যাবে। নিচে থেকে ডাউনলোড করে নিন:<br>
+                <a class="download-link" href="${releaseUrl}" target="_blank">⬇️ Download Signed APK</a><br>
+                <a class="download-link" style="background:#38bdf8;" href="${actionsUrl}" target="_blank">📊 লাইভ প্রগ্রেস দেখুন</a>`;
+            } catch (err) {
+                status.innerHTML = '❌ ত্রুটি: ' + err.message;
+            }
+        }
+    </script>
 </body>
 </html>
