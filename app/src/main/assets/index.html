@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>5ft App Builder - Real APK Studio</title>
+  <!-- JSZip library to read/write real .apk and .zip binaries in browser -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --border: #334155;
+      --accent: #38bdf8;
+      --green: #22c55e;
+      --amber: #f59e0b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      background: linear-gradient(135deg, #38bdf8, #2563eb);
+      color: #fff;
+      font-weight: 800;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .tabs {
+      display: flex;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px 8px;
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      border-bottom: 3px solid transparent;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .container {
+      flex: 1;
+      padding: 16px;
+      max-width: 960px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .section {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .section.active {
+      display: flex;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card h3 {
+      font-size: 1rem;
+      color: #fff;
+    }
+
+    .card p {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    textarea {
+      width: 100%;
+      height: 300px;
+      background: #090e17;
+      color: #38bdf8;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      resize: vertical;
+      outline: none;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button, .file-label {
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+
+    .btn-blue { background: var(--accent); color: #0f172a; }
+    .btn-green { background: var(--green); color: #052e16; }
+    .btn-amber { background: var(--amber); color: #0f172a; }
+    .btn-dark { background: #334155; color: #fff; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .field label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .field input {
+      background: #090e17;
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+
+    /* Phone Preview */
+    .phone-wrap {
+      display: flex;
+      justify-content: center;
+      padding: 10px 0;
+    }
+
+    .phone {
+      width: 320px;
+      height: 540px;
+      border: 10px solid #334155;
+      border-radius: 32px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+    }
+
+    .phone-top {
+      background: #0284c7;
+      color: #fff;
+      padding: 10px 14px;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .phone iframe {
+      flex: 1;
+      border: none;
+      width: 100%;
+    }
+
+    .status-log {
+      background: #090e17;
+      border: 1px solid var(--border);
+      color: #22c55e;
+      padding: 12px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      white-space: pre-wrap;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="badge">5FT</div>
+      <div>
+        <div style="font-weight:700;">5ft App Builder</div>
+        <div style="font-size:0.75rem;color:var(--muted);">HTML to Real .APK Compiler</div>
+      </div>
+    </div>
+    <button class="btn-green" onclick="openTab('tabBuild')">⚙ Build APK</button>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="btnCode" onclick="openTab('tabCode')">1. Paste HTML</button>
+    <button class="tab-btn" id="btnPreview" onclick="openTab('tabPreview')">2. App Preview</button>
+    <button class="tab-btn" id="btnBuild" onclick="openTab('tabBuild')">3. Export .APK</button>
+  </div>
+
+  <div class="container">
+
+    <!-- STEP 1: PASTE HTML -->
+    <div class="section active" id="tabCode">
+      <div class="card">
+        <h3>Paste Your App HTML Code</h3>
+        <div class="toolbar">
+          <button class="btn-blue" onclick="pasteCode()">📋 Paste Clipboard</button>
+          <button class="btn-dark" onclick="loadSample()">Load Sample App</button>
+          <button class="btn-dark" onclick="document.getElementById('htmlInput').value=''">🗑 Clear</button>
+        </div>
+        <textarea id="htmlInput" placeholder="Paste your <!DOCTYPE html>... code here"></textarea>
+      </div>
+    </div>
+
+    <!-- STEP 2: PREVIEW -->
+    <div class="section" id="tabPreview">
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="phone-top" id="previewHeader">My 5ft App</div>
+          <iframe id="previewFrame" sandbox="allow-scripts allow-forms allow-modals"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: BUILD REAL APK -->
+    <div class="section" id="tabBuild">
+
+      <!-- App Settings -->
+      <div class="card">
+        <h3>App Details</h3>
+        <div class="form-grid">
+          <div class="field">
+            <label>App Name</label>
+            <input type="text" id="appName" value="My 5ft App" oninput="document.getElementById('previewHeader').innerText=this.value" />
+          </div>
+          <div class="field">
+            <label>Package ID</label>
+            <input type="text" id="pkgName" value="com.fiveft.customapp" />
+          </div>
+        </div>
+      </div>
+
+      <!-- METHOD 1: DIRECT IN-BROWSER APK INJECTOR -->
+      <div class="card">
+        <h3>Method 1: Instant Offline .APK Injector (Direct .apk file)</h3>
+        <p>
+          Select any base WebView <code>.apk</code> file from your phone. 5ft App Builder will open the APK binary right in your browser, inject your pasted HTML into <code>assets/index.html</code>, and output your new <strong>.apk</strong> file immediately!
+        </p>
+        <div class="toolbar">
+          <label class="file-label btn-amber">
+            📂 1. Select Base WebView .APK
+            <input type="file" id="baseApkInput" accept=".apk,.zip" style="display:none" onchange="checkBaseApk(this)" />
+          </label>
+          <button class="btn-green" onclick="injectHtmlIntoApk()">⚡ 2. Build & Download .APK</button>
+        </div>
+        <div id="apkInjectorStatus" class="status-log"></div>
+      </div>
+
+      <!-- METHOD 2: CLOUD SIGNED APK COMPILER -->
+      <div class="card">
+        <h3>Method 2: Cloud Signed .APK Compiler (100% Installable Signed APK)</h3>
+        <p>
+          Don't have a base APK? Push your pasted HTML directly to a free GitHub repository using a Personal Access Token, or download the auto-compiling Android SDK package. GitHub's cloud server compiles and signs a real <strong>.apk</strong> in 90 seconds.
+        </p>
+        <div class="form-grid">
+          <div class="field">
+            <label>GitHub Username / Repo (e.g. john/my-apk)</label>
+            <input type="text" id="ghRepo" placeholder="username/repo-name" />
+          </div>
+          <div class="field">
+            <label>GitHub Token (with 'repo' & 'workflow' scope)</label>
+            <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx" />
+          </div>
+        </div>
+        <div class="toolbar">
+          <button class="btn-blue" onclick="triggerCloudApkBuild()">🚀 Compile Signed .APK in Cloud</button>
+          <button class="btn-dark" onclick="downloadCompilerZip()">📦 Download Ready-to-Compile APK Project (.zip)</button>
+        </div>
+        <div id="cloudStatus" class="status-log"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const sampleHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; background: #0f172a; color: #fff; text-align: center; padding: 24px; }
+    .box { background: #1e293b; padding: 20px; border-radius: 16px; margin-top: 20px; }
+    button { background: #22c55e; color: #000; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <h2>Built with 5ft App Builder</h2>
+  <div class="box">
+    <p id="msg">Ready to run as an Android APK!</p>
+    <button onclick="document.getElementById('msg').innerText='Hello from inside your APK! 🎉'">Test Button</button>
+  </div>
+</body>
+</html>`;
+
+    document.getElementById('htmlInput').value = sampleHtml;
+
+    function openTab(tabId) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+
+      if (tabId === 'tabCode') document.getElementById('btnCode').classList.add('active');
+      if (tabId === 'tabPreview') {
+        document.getElementById('btnPreview').classList.add('active');
+        document.getElementById('previewFrame').srcdoc = document.getElementById('htmlInput').value;
+      }
+      if (tabId === 'tabBuild') document.getElementById('btnBuild').classList.add('active');
+    }
+
+    async function pasteCode() {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) document.getElementById('htmlInput').value = text;
+      } catch {
+        alert('Long-press inside the text box and tap Paste.');
+      }
+    }
+
+    function loadSample() {
+      document.getElementById('htmlInput').value = sampleHtml;
+    }
+
+    // ==========================================================
+    // ENGINE 1: IN-BROWSER APK BINARY HTML INJECTOR
+    // ==========================================================
+    let loadedApkFile = null;
+
+    function checkBaseApk(input) {
+      loadedApkFile = input.files[0];
+      const log = document.getElementById('apkInjectorStatus');
+      if (loadedApkFile) {
+        log.style.display = 'block';
+        log.textContent = `✔ Loaded Base APK: ${loadedApkFile.name} (${(loadedApkFile.size / 1024).toFixed(1)} KB)\nClick "Build & Download .APK" to inject your HTML.`;
+      }
+    }
+
+    async function injectHtmlIntoApk() {
+      const log = document.getElementById('apkInjectorStatus');
+      log.style.display = 'block';
+
+      if (!loadedApkFile) {
+        log.textContent = '⚠ Please select a Base WebView .APK file first (Step 1).';
+        return;
+      }
+
+      try {
+        log.textContent = '⏳ Reading APK binary archive...';
+        const zip = await JSZip.loadAsync(loadedApkFile);
+
+        // Remove old META-INF signatures so Android Signer tools can cleanly re-sign it
+        Object.keys(zip.files).forEach(filename => {
+          if (filename.startsWith('META-INF/') && (filename.endsWith('.SF') || filename.endsWith('.RSA') || filename.endsWith('.DSA') || filename.endsWith('.MF'))) {
+            zip.remove(filename);
+          }
+        });
+
+        // Inject user's pasted HTML into assets/index.html
+        const htmlContent = document.getElementById('htmlInput').value;
+        zip.file('assets/index.html', htmlContent);
+
+        log.textContent = '⏳ Repackaging new .APK binary...';
+        const apkBlob = await zip.generateAsync({
+          type: 'blob',
+          mimeType: 'application/vnd.android.package-archive',
+          compression: 'DEFLATE'
+        });
+
+        const appName = (document.getElementById('appName').value || '5ft_app').replace(/\s+/g, '_').toLowerCase();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(apkBlob);
+        a.download = `${appName}_unsigned.apk`;
+        a.click();
+
+        log.textContent = `✅ SUCCESS! Downloaded "${appName}_unsigned.apk".\n\nIMPORTANT FINAL STEP ON ANDROID:\nBecause Android requires cryptographic signatures on modified APKs, open the free "APK Signer" or "NP Manager" app on your phone, select "${appName}_unsigned.apk", tap "Sign APK", and install!`;
+      } catch (err) {
+        log.textContent = '❌ Error modifying APK: ' + err.message;
+      }
+    }
+
+    // ==========================================================
+    // ENGINE 2: REAL SIGNED ANDROID SDK COMPILER (GITHUB / ZIP)
+    // ==========================================================
+    function getAndroidProjectFiles() {
+      const appName = document.getElementById('appName').value || 'My 5ft App';
+      const pkg = document.getElementById('pkgName').value || 'com.fiveft.customapp';
+      const pkgPath = pkg.replace(/\./g, '/');
+      const htmlContent = document.getElementById('htmlInput').value;
+
+      return {
+        'settings.gradle': `rootProject.name = "5ftApp"\ninclude ':app'`,
+        'build.gradle': `buildscript {\n    repositories { google(); mavenCentral() }\n    dependencies { classpath 'com.android.tools.build:gradle:8.2.0' }\n}\nallprojects {\n    repositories { google(); mavenCentral() }\n}`,
+        'app/build.gradle': `plugins {\n    id 'com.android.application'\n}\nandroid {\n    namespace '${pkg}'\n    compileSdk 34\n    defaultConfig {\n        applicationId "${pkg}"\n        minSdk 21\n        targetSdk 34\n        versionCode 1\n        versionName "1.0"\n    }\n}`,
+        'app/src/main/AndroidManifest.xml': `<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <application
+        android:label="${appName}"
+        android:usesCleartextTraffic="true"
+        android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+        <activity android:name=".MainActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>`,
+        [`app/src/main/java/${pkgPath}/MainActivity.java`]: `package ${pkg};
+import android.app.Activity;
+import android.os.Bundle;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+
+public class MainActivity extends Activity {
+    private WebView webView;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        webView = new WebView(this);
+        setContentView(webView);
+        WebSettings ws = webView.getSettings();
+        ws.setJavaScriptEnabled(true);
+        ws.setDomStorageEnabled(true);
+        webView.setWebViewClient(new WebViewClient());
+        webView.loadUrl("file:///android_asset/index.html");
+    }
+    @Override
+    public void onBackPressed() {
+        if (webView.canGoBack()) webView.goBack();
+        else super.onBackPressed();
+    }
+}`,
+        'app/src/main/assets/index.html': htmlContent,
+        '.github/workflows/build-apk.yml': `name: Build Signed Android APK
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Compile Signed APK
+        run: gradle assembleDebug
+      - name: Upload Ready APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: 5ft-Signed-APK
+          path: app/build/outputs/apk/debug/app-debug.apk`
+      };
+    }
+
+    async function downloadCompilerZip() {
+      const log = document.getElementById('cloudStatus');
+      log.style.display = 'block';
+      log.textContent = '⏳ Packaging complete Android APK project...';
+
+      const zip = new JSZip();
+      const files = getAndroidProjectFiles();
+      for (const [path, content] of Object.entries(files)) {
+        zip.file(path, content);
+      }
+
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = '5ft_Android_APK_Project.zip';
+      a.click();
+
+      log.textContent = '✅ Downloaded 5ft_Android_APK_Project.zip!\nUpload these files to any free GitHub repository or open in AndroidIDE / Android Studio to get your signed app-debug.apk.';
+    }
+
+    async function triggerCloudApkBuild() {
+      const repo = document.getElementById('ghRepo').value.trim();
+      const token = document.getElementById('ghToken').value.trim();
+      const log = document.getElementById('cloudStatus');
+      log.style.display = 'block';
+
+      if (!repo || !token) {
+        log.textContent = '⚠ Enter both your GitHub Repo (username/repo) and Personal Access Token.';
+        return;
+      }
+
+      log.textContent = '⏳ Uploading your HTML & Android source files to GitHub Cloud Compiler...';
+      const files = getAndroidProjectFiles();
+
+      try {
+        for (const [path, content] of Object.entries(files)) {
+          const url = `https://api.github.com/repos/${repo}/contents/${path}`;
+          let sha = null;
+
+          // Check if file already exists
+          const check = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (check.ok) {
+            const data = await check.json();
+            sha = data.sha;
+          }
+
+          const body = {
+            message: `Build APK via 5ft App Builder`,
+            content: btoa(unescape(encodeURIComponent(content)))
+          };
+          if (sha) body.sha = sha;
+
+          const res = await fetch(url, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+          });
+
+          if (!res.ok) throw new Error(`Failed uploading ${path} (${res.status})`);
+        }
+
+        log.textContent = `✅ SUCCESS! Cloud APK Build started!\n\nOpen: https://github.com/${repo}/actions\nWait ~60 seconds for the green checkmark, and download your signed, ready-to-install .APK under "Artifacts -> 5ft-Signed-APK"!`;
+      } catch (err) {
+        log.textContent = '❌ Cloud Build Error: ' + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
