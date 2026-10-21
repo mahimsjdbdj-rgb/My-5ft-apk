@@ -3,593 +3,2278 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>5ft App Builder - Real APK Studio</title>
-  <!-- JSZip library to read/write real .apk and .zip binaries in browser -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <title>5ft NOTE</title>
   <style>
     :root {
-      --bg: #0f172a;
-      --panel: #1e293b;
-      --border: #334155;
-      --accent: #38bdf8;
-      --green: #22c55e;
-      --amber: #f59e0b;
-      --text: #f8fafc;
-      --muted: #94a3b8;
+      --bg: #0B0F17;
+      --surface: #141C2B;
+      --surface-2: #1E293B;
+      --surface-3: #283548;
+      --header-blue: #1D8CF8;
+      --primary: #2563EB;
+      --accent: #10B981;
+      --amber: #F59E0B;
+      --danger: #EF4444;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --border: #263348;
+      --radius: 14px;
+      --line-color: rgba(148, 163, 184, 0.14);
+    }
+
+    [data-theme="light"] {
+      --bg: #F1F5F9;
+      --surface: #FFFFFF;
+      --surface-2: #E2E8F0;
+      --surface-3: #CBD5E1;
+      --header-blue: #1976D2;
+      --primary: #2563EB;
+      --accent: #059669;
+      --amber: #D97706;
+      --danger: #DC2626;
+      --text: #0F172A;
+      --text-muted: #64748B;
+      --border: #CBD5E1;
+      --line-color: rgba(15, 23, 42, 0.12);
     }
 
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
-      min-height: 100vh;
+      height: 100dvh;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
+      user-select: none;
     }
 
-    header {
-      background: var(--panel);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 16px;
+    /* Top App Header */
+    .app-header {
+      height: 56px;
+      background: var(--header-blue);
+      color: #FFFFFF;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      flex-shrink: 0;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      z-index: 40;
     }
 
-    .brand {
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: none;
+      background: rgba(255, 255, 255, 0.16);
+      color: #FFFFFF;
+      font-size: 18px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .icon-btn:active { background: rgba(255, 255, 255, 0.3); }
+
+    .app-title {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Sidebar Hamburger Menu */
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      z-index: 90;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+
+    .drawer {
+      position: fixed;
+      top: 56px;
+      left: 0;
+      bottom: 0;
+      width: 305px;
+      max-width: 85vw;
+      background: #0D121B;
+      color: #F8FAFC;
+      z-index: 100;
+      transform: translateX(-100%);
+      transition: transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #263348;
+      overflow-y: auto;
+      padding: 8px 10px 36px;
+    }
+    .drawer.open { transform: translateX(0); }
+
+    .drawer-section {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #64748B;
+      letter-spacing: 0.9px;
+      margin: 14px 10px 5px;
+      text-transform: uppercase;
+    }
+
+    .drawer-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 11px;
+      cursor: pointer;
+      color: #E2E8F0;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .drawer-item:active, .drawer-item.active {
+      background: #1B283E;
+      color: #60A5FA;
+    }
+
+    .drawer-item-left {
       display: flex;
       align-items: center;
       gap: 10px;
     }
 
     .badge {
-      background: linear-gradient(135deg, #38bdf8, #2563eb);
-      color: #fff;
+      font-size: 9.5px;
       font-weight: 800;
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-size: 0.9rem;
+      padding: 2.5px 8px;
+      border-radius: 99px;
+      text-transform: uppercase;
     }
+    .badge-free { background: #10B981; color: #052E16; }
+    .badge-count { background: #10B981; color: #052E16; min-width: 22px; text-align: center; }
+    .badge-pin { background: #38BDF8; color: #082F49; }
+    .badge-hot { background: #F59E0B; color: #451A03; }
 
-    .tabs {
-      display: flex;
-      background: var(--panel);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .tab-btn {
+    /* Main Workspace */
+    .workspace {
       flex: 1;
-      padding: 12px 8px;
-      background: transparent;
-      color: var(--muted);
-      border: none;
-      border-bottom: 3px solid transparent;
-      font-weight: 600;
-      font-size: 0.85rem;
-      cursor: pointer;
-    }
-
-    .tab-btn.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-      background: rgba(56, 189, 248, 0.08);
-    }
-
-    .container {
-      flex: 1;
-      padding: 16px;
-      max-width: 960px;
-      width: 100%;
-      margin: 0 auto;
-    }
-
-    .section {
-      display: none;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .section.active {
-      display: flex;
+      overflow-y: auto;
+      padding: 14px 14px 80px;
+      user-select: text;
     }
 
     .card {
-      background: var(--panel);
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px;
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+    }
+
+    .section-title {
+      font-size: 17px;
+      font-weight: 800;
+      margin: 0 0 12px;
       display: flex;
-      flex-direction: column;
-      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
-    .card h3 {
-      font-size: 1rem;
-      color: #fff;
-    }
-
-    .card p {
-      font-size: 0.82rem;
-      color: var(--muted);
-      line-height: 1.4;
-    }
-
-    textarea {
+    .input, .textarea, select {
       width: 100%;
-      height: 300px;
-      background: #090e17;
-      color: #38bdf8;
+      padding: 10px 12px;
+      border-radius: 10px;
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px;
-      font-family: monospace;
-      font-size: 0.85rem;
-      resize: vertical;
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 15px;
       outline: none;
+      margin-bottom: 10px;
+      font-family: inherit;
     }
 
-    .toolbar {
+    .textarea {
+      min-height: 150px;
+      resize: vertical;
+      line-height: 28px;
+    }
+
+    /* Paper Styles for Note Editor */
+    .paper-plain { background-image: none; }
+    .paper-ruled {
+      background-image: repeating-linear-gradient(transparent, transparent 27px, var(--line-color) 27px, var(--line-color) 28px);
+      background-attachment: local;
+    }
+    .paper-grid {
+      background-image:
+        linear-gradient(to right, var(--line-color) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--line-color) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    .btn-row {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
     }
 
-    button, .file-label {
+    .btn {
+      padding: 9px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
       cursor: pointer;
-      border: none;
-      border-radius: 6px;
-      padding: 10px 14px;
-      font-size: 0.85rem;
-      font-weight: 600;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      text-decoration: none;
-    }
-
-    .btn-blue { background: var(--accent); color: #0f172a; }
-    .btn-green { background: var(--green); color: #052e16; }
-    .btn-amber { background: var(--amber); color: #0f172a; }
-    .btn-dark { background: #334155; color: #fff; }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
-    }
-
-    .field {
-      display: flex;
-      flex-direction: column;
       gap: 5px;
     }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--primary); color: #FFFFFF; border-color: var(--primary); }
+    .btn-success { background: var(--accent); color: #FFFFFF; border-color: var(--accent); }
+    .btn-amber { background: var(--amber); color: #FFFFFF; border-color: var(--amber); }
+    .btn-danger { background: var(--danger); color: #FFFFFF; border-color: var(--danger); }
 
-    .field label {
-      font-size: 0.78rem;
-      color: var(--muted);
-      font-weight: 600;
+    /* Horizontal Tool Strip */
+    .toolbar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+      scrollbar-width: none;
     }
+    .toolbar::-webkit-scrollbar { display: none; }
 
-    .field input {
-      background: #090e17;
+    .tool-chip {
+      padding: 6px 11px;
+      border-radius: 9px;
+      background: var(--surface-2);
       border: 1px solid var(--border);
-      color: #fff;
-      padding: 10px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-    }
-
-    /* Phone Preview */
-    .phone-wrap {
-      display: flex;
-      justify-content: center;
-      padding: 10px 0;
-    }
-
-    .phone {
-      width: 320px;
-      height: 540px;
-      border: 10px solid #334155;
-      border-radius: 32px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      background: #fff;
-    }
-
-    .phone-top {
-      background: #0284c7;
-      color: #fff;
-      padding: 10px 14px;
+      color: var(--text);
+      font-size: 12px;
       font-weight: 700;
-      font-size: 0.9rem;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .tool-chip:active { background: var(--primary); color: #FFF; }
+
+    /* Tick Item */
+    .tick-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface-2);
+      padding: 10px 12px;
+      border-radius: 11px;
+      margin-bottom: 7px;
+    }
+    .tick-item input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .tick-text { flex: 1; font-size: 14.5px; }
+    .tick-text.done { text-decoration: line-through; opacity: 0.55; }
+
+    .progress-bar-wrap {
+      height: 10px;
+      background: var(--surface-2);
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 6px 0 12px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.25s ease;
     }
 
-    .phone iframe {
-      flex: 1;
-      border: none;
-      width: 100%;
-    }
-
-    .status-log {
-      background: #090e17;
-      border: 1px solid var(--border);
-      color: #22c55e;
-      padding: 12px;
-      border-radius: 6px;
+    /* Calculator */
+    .calc-screen {
+      background: #080C14;
+      color: #38BDF8;
+      padding: 14px;
+      border-radius: 12px;
+      text-align: right;
       font-family: monospace;
-      font-size: 0.8rem;
-      white-space: pre-wrap;
-      display: none;
+      font-size: 25px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      min-height: 62px;
+      word-break: break-all;
+      border: 1px solid var(--border);
+    }
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 7px;
+    }
+    .calc-key {
+      padding: 13px 6px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .calc-key.op { background: #1E3A8A; color: #93C5FD; }
+    .calc-key.eq { background: var(--accent); color: #052E16; }
+
+    /* Table */
+    .calc-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 12px;
+    }
+    .calc-table th, .calc-table td {
+      border: 1px solid var(--border);
+      padding: 7px;
+      text-align: center;
+    }
+    .calc-table input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      text-align: center;
+      font-size: 14px;
+      outline: none;
+    }
+
+    /* Sketch Canvas */
+    #sketchPad {
+      width: 100%;
+      height: 290px;
+      background: #FFFFFF;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      touch-action: none;
+      display: block;
+    }
+
+    .photo-preview-box {
+      width: 100%;
+      max-height: 240px;
+      object-fit: contain;
+      border-radius: 11px;
+      background: #000;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    /* Non-Intrusive Bottom AdMob Banner (Hidden while typing inside Write Note) */
+    .ad-footer {
+      height: 44px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      font-size: 11px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #10B981;
+      color: #052E16;
+      padding: 10px 18px;
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 800;
+      z-index: 300;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+    .toast.show { opacity: 1; }
+
+    @media print {
+      .app-header, .drawer, .btn-row, .toolbar, .ad-footer { display: none !important; }
+      body, .workspace { height: auto; overflow: visible; background: #FFF; color: #000; }
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="brand">
-      <div class="badge">5FT</div>
-      <div>
-        <div style="font-weight:700;">5ft App Builder</div>
-        <div style="font-size:0.75rem;color:var(--muted);">HTML to Real .APK Compiler</div>
-      </div>
+  <!-- Top App Bar with Built-in Undo/Redo & Quick Access -->
+  <header class="app-header">
+    <div class="header-left">
+      <button class="icon-btn" onclick="toggleDrawer()" title="Menu">☰</button>
+      <div class="app-title">5ft NOTE</div>
     </div>
-    <button class="btn-green" onclick="openTab('tabBuild')">⚙ Build APK</button>
+    <div class="header-actions">
+      <button class="icon-btn" id="globalUndoBtn" onclick="triggerGlobalUndo()" title="Undo">↶</button>
+      <button class="icon-btn" id="globalRedoBtn" onclick="triggerGlobalRedo()" title="Redo">↷</button>
+      <button class="icon-btn" onclick="openTool('SAVED_NOTES')" title="Saved Items">📁</button>
+      <button class="icon-btn" onclick="editingNoteId=null;openTool('WRITE_NOTE')" title="Write Note">📝</button>
+      <button class="icon-btn" onclick="toggleTheme()" title="Switch Theme">🌗</button>
+    </div>
   </header>
 
-  <div class="tabs">
-    <button class="tab-btn active" id="btnCode" onclick="openTab('tabCode')">1. Paste HTML</button>
-    <button class="tab-btn" id="btnPreview" onclick="openTab('tabPreview')">2. App Preview</button>
-    <button class="tab-btn" id="btnBuild" onclick="openTab('tabBuild')">3. Export .APK</button>
-  </div>
+  <!-- Drawer Backdrop -->
+  <div id="drawerBackdrop" class="drawer-backdrop" onclick="toggleDrawer(false)"></div>
 
-  <div class="container">
-
-    <!-- STEP 1: PASTE HTML -->
-    <div class="section active" id="tabCode">
-      <div class="card">
-        <h3>Paste Your App HTML Code</h3>
-        <div class="toolbar">
-          <button class="btn-blue" onclick="pasteCode()">📋 Paste Clipboard</button>
-          <button class="btn-dark" onclick="loadSample()">Load Sample App</button>
-          <button class="btn-dark" onclick="document.getElementById('htmlInput').value=''">🗑 Clear</button>
-        </div>
-        <textarea id="htmlInput" placeholder="Paste your <!DOCTYPE html>... code here"></textarea>
-      </div>
+  <!-- Hamburger Sidebar Menu (All 25 Tools 100% Free & English) -->
+  <aside id="drawer" class="drawer">
+    <div class="drawer-section">NOTES, LISTS & STUDIO</div>
+    <div class="drawer-item" data-tool="SAVED_NOTES" onclick="openTool('SAVED_NOTES')">
+      <div class="drawer-item-left"><span>📁</span><span>Saved Notes / Items</span></div>
+      <span class="badge badge-count" id="savedCountBadge">0</span>
+    </div>
+    <div class="drawer-item active" data-tool="WRITE_NOTE" onclick="openTool('WRITE_NOTE')">
+      <div class="drawer-item-left"><span>📝</span><span>Write Note</span></div>
+      <span class="badge badge-free">FREE</span>
+    </div>
+    <div class="drawer-item" data-tool="TITLE_LIST" onclick="openTool('TITLE_LIST')">
+      <div class="drawer-item-left"><span>📄</span><span>Simple Title List</span></div>
+      <span class="badge badge-free">FREE</span>
+    </div>
+    <div class="drawer-item" data-tool="TICK_LIST" onclick="openTool('TICK_LIST')">
+      <div class="drawer-item-left"><span>✅</span><span>Special Tick-Mark List</span></div>
+      <span class="badge badge-free">FREE</span>
+    </div>
+    <div class="drawer-item" data-tool="POSTER_STUDIO" onclick="openTool('POSTER_STUDIO')">
+      <div class="drawer-item-left"><span>🖼️</span><span>Note to Poster (.PNG)</span></div>
+      <span class="badge badge-hot">NEW</span>
+    </div>
+    <div class="drawer-item" data-tool="PHOTO_STUDIO" onclick="openTool('PHOTO_STUDIO')">
+      <div class="drawer-item-left"><span>📷</span><span>Photo Studio & Scanner</span></div>
+      <span class="badge badge-free">FREE</span>
+    </div>
+    <div class="drawer-item" data-tool="PDF_TOOL" onclick="openTool('PDF_TOOL')">
+      <div class="drawer-item-left"><span>📕</span><span>PDF Import & Export</span></div>
+      <span class="badge badge-free">FREE</span>
     </div>
 
-    <!-- STEP 2: PREVIEW -->
-    <div class="section" id="tabPreview">
-      <div class="phone-wrap">
-        <div class="phone">
-          <div class="phone-top" id="previewHeader">My 5ft App</div>
-          <iframe id="previewFrame" sandbox="allow-scripts allow-forms allow-modals"></iframe>
-        </div>
-      </div>
+    <div class="drawer-section">MATH, TABLE & FINANCE</div>
+    <div class="drawer-item" data-tool="SCI_CALC" onclick="openTool('SCI_CALC')">
+      <div class="drawer-item-left"><span>🧮</span><span>Scientific Calculator</span></div>
+      <span class="badge badge-free">FREE</span>
+    </div>
+    <div class="drawer-item" data-tool="CALC_TABLE" onclick="openTool('CALC_TABLE')">
+      <div class="drawer-item-left"><span>📊</span><span>Calculation Table</span></div>
+      <span class="badge badge-free">2x2</span>
+    </div>
+    <div class="drawer-item" data-tool="BUDGET" onclick="openTool('BUDGET')">
+      <div class="drawer-item-left"><span>💰</span><span>Monthly Budget Planner</span></div>
+      <span class="badge badge-free">FREE</span>
+    </div>
+    <div class="drawer-item" data-tool="CREDIT_LEDGER" onclick="openTool('CREDIT_LEDGER')">
+      <div class="drawer-item-left"><span>📓</span><span>Credit & Debt Ledger</span></div>
+      <span class="badge badge-free">FREE</span>
+    </div>
+    <div class="drawer-item" data-tool="EMI_CALC" onclick="openTool('EMI_CALC')">
+      <div class="drawer-item-left"><span>🏦</span><span>Loan EMI Calculator</span></div>
+      <span class="badge badge-free">FREE</span>
+    </div>
+    <div class="drawer-item" data-tool="BILL_SPLIT" onclick="openTool('BILL_SPLIT')">
+      <div class="drawer-item-left"><span>🍕</span><span>Friends Bill Splitter</span></div>
+      <span class="badge badge-free">FREE</span>
     </div>
 
-    <!-- STEP 3: BUILD REAL APK -->
-    <div class="section" id="tabBuild">
-
-      <!-- App Settings -->
-      <div class="card">
-        <h3>App Details</h3>
-        <div class="form-grid">
-          <div class="field">
-            <label>App Name</label>
-            <input type="text" id="appName" value="My 5ft App" oninput="document.getElementById('previewHeader').innerText=this.value" />
-          </div>
-          <div class="field">
-            <label>Package ID</label>
-            <input type="text" id="pkgName" value="com.fiveft.customapp" />
-          </div>
-        </div>
-      </div>
-
-      <!-- METHOD 1: DIRECT IN-BROWSER APK INJECTOR -->
-      <div class="card">
-        <h3>Method 1: Instant Offline .APK Injector (Direct .apk file)</h3>
-        <p>
-          Select any base WebView <code>.apk</code> file from your phone. 5ft App Builder will open the APK binary right in your browser, inject your pasted HTML into <code>assets/index.html</code>, and output your new <strong>.apk</strong> file immediately!
-        </p>
-        <div class="toolbar">
-          <label class="file-label btn-amber">
-            📂 1. Select Base WebView .APK
-            <input type="file" id="baseApkInput" accept=".apk,.zip" style="display:none" onchange="checkBaseApk(this)" />
-          </label>
-          <button class="btn-green" onclick="injectHtmlIntoApk()">⚡ 2. Build & Download .APK</button>
-        </div>
-        <div id="apkInjectorStatus" class="status-log"></div>
-      </div>
-
-      <!-- METHOD 2: CLOUD SIGNED APK COMPILER -->
-      <div class="card">
-        <h3>Method 2: Cloud Signed .APK Compiler (100% Installable Signed APK)</h3>
-        <p>
-          Don't have a base APK? Push your pasted HTML directly to a free GitHub repository using a Personal Access Token, or download the auto-compiling Android SDK package. GitHub's cloud server compiles and signs a real <strong>.apk</strong> in 90 seconds.
-        </p>
-        <div class="form-grid">
-          <div class="field">
-            <label>GitHub Username / Repo (e.g. john/my-apk)</label>
-            <input type="text" id="ghRepo" placeholder="username/repo-name" />
-          </div>
-          <div class="field">
-            <label>GitHub Token (with 'repo' & 'workflow' scope)</label>
-            <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx" />
-          </div>
-        </div>
-        <div class="toolbar">
-          <button class="btn-blue" onclick="triggerCloudApkBuild()">🚀 Compile Signed .APK in Cloud</button>
-          <button class="btn-dark" onclick="downloadCompilerZip()">📦 Download Ready-to-Compile APK Project (.zip)</button>
-        </div>
-        <div id="cloudStatus" class="status-log"></div>
-      </div>
-
+    <div class="drawer-section">VAULT, AUDIO & SKETCH</div>
+    <div class="drawer-item" data-tool="GHOST_VAULT" onclick="openTool('GHOST_VAULT')">
+      <div class="drawer-item-left"><span>🔒</span><span>Private Ghost Vault</span></div>
+      <span class="badge badge-pin">PIN</span>
     </div>
-  </div>
+    <div class="drawer-item" data-tool="ID_WALLET" onclick="openTool('ID_WALLET')">
+      <div class="drawer-item-left"><span>🪪</span><span>ID & Document Wallet</span></div>
+      <span class="badge badge-free">FREE</span>
+    </div>
+    <div class="drawer-item" data-tool="PASS_MANAGER" onclick="openTool('PASS_MANAGER')">
+      <div class="drawer-item-left"><span>🔑</span><span>Password Manager</span></div>
+      <span class="badge badge-free">FREE</span>
+    </div>
+    <div class="drawer-item" data-tool="VOICE_REC" onclick="openTool('VOICE_REC')">
+      <div class="drawer-item-left"><span>🎙️</span><span>Audio Voice Recorder</span></div>
+      <span class="badge badge-free">FREE</span>
+    </div>
+    <div class="drawer-item" data-tool="FOCUS_TIMER" onclick="openTool('FOCUS_TIMER')">
+      <div class="drawer-item-left"><span>⏱️</span><span>Focus Timer & Stopwatch</span></div>
+      <span class="badge badge-free">FREE</span>
+    </div>
+    <div class="drawer-item" data-tool="SKETCHPAD" onclick="openTool('SKETCHPAD')">
+      <div class="drawer-item-left"><span>🎨</span><span>Digital Sketchpad</span></div>
+      <span class="badge badge-free">FREE</span>
+    </div>
+
+    <div class="drawer-section">ALL-ROUNDER EXTRA TOOLS</div>
+    <div class="drawer-item" data-tool="HABIT_TRACKER" onclick="openTool('HABIT_TRACKER')">
+      <div class="drawer-item-left"><span>🔥</span><span>Habit & Routine Tracker</span></div>
+      <span class="badge badge-free">FREE</span>
+    </div>
+    <div class="drawer-item" data-tool="FLASHCARDS" onclick="openTool('FLASHCARDS')">
+      <div class="drawer-item-left"><span>🧠</span><span>Flashcards & Self-Quiz</span></div>
+      <span class="badge badge-free">FREE</span>
+    </div>
+    <div class="drawer-item" data-tool="COUNTDOWN" onclick="openTool('COUNTDOWN')">
+      <div class="drawer-item-left"><span>⏳</span><span>Event & Exam Countdown</span></div>
+      <span class="badge badge-free">FREE</span>
+    </div>
+    <div class="drawer-item" data-tool="CONVERTER" onclick="openTool('CONVERTER')">
+      <div class="drawer-item-left"><span>🔄</span><span>Unit & Currency Converter</span></div>
+      <span class="badge badge-free">FREE</span>
+    </div>
+    <div class="drawer-item" data-tool="AGE_BMI" onclick="openTool('AGE_BMI')">
+      <div class="drawer-item-left"><span>🎂</span><span>Age & BMI Calculator</span></div>
+      <span class="badge badge-free">FREE</span>
+    </div>
+    <div class="drawer-item" data-tool="QR_BACKUP" onclick="openTool('QR_BACKUP')">
+      <div class="drawer-item-left"><span>📱</span><span>QR Maker & Data Backup</span></div>
+      <span class="badge badge-free">FREE</span>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main id="workspace" class="workspace"></main>
+
+  <!-- Non-Editing AdMob Test Banner Slot -->
+  <footer id="adFooter" class="ad-footer">
+    <span><b>AdMob Test</b> • 5ft NOTE Workspace</span>
+    <span>ca-app-pub-3940256099942544/9214589741</span>
+  </footer>
+
+  <div id="toast" class="toast"></div>
 
   <script>
-    const sampleHtml = `<!DOCTYPE html>
-<html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: sans-serif; background: #0f172a; color: #fff; text-align: center; padding: 24px; }
-    .box { background: #1e293b; padding: 20px; border-radius: 16px; margin-top: 20px; }
-    button { background: #22c55e; color: #000; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 12px; }
-  </style>
-</head>
-<body>
-  <h2>Built with 5ft App Builder</h2>
-  <div class="box">
-    <p id="msg">Ready to run as an Android APK!</p>
-    <button onclick="document.getElementById('msg').innerText='Hello from inside your APK! 🎉'">Test Button</button>
-  </div>
-</body>
-</html>`;
+    const DB_KEY = 'five_ft_note_english_v6';
 
-    document.getElementById('htmlInput').value = sampleHtml;
+    let db = {
+      notes: [],
+      titleList: [],
+      tickList: [
+        { id: 1, text: 'Buy groceries & fresh fruits', done: false },
+        { id: 2, text: 'Complete project documentation', done: true }
+      ],
+      creditLedger: [
+        { id: 1, name: 'Alex Store', amount: 500, type: 'RECEIVE', note: 'Invoice #102' }
+      ],
+      tableData: [
+        ['Item A', '350', '70'],
+        ['Item B', '360', '40']
+      ],
+      budgets: [],
+      vaultPin: '',
+      vaultNotes: [],
+      idCards: [
+        { id: 1, type: 'National ID', title: 'Personal ID Card', number: '1998XXXXXXXXX', details: 'Blood Group: O+' }
+      ],
+      passwords: [],
+      habits: [
+        { id: 1, name: 'Morning Exercise (30 mins)', streak: 5, doneToday: false },
+        { id: 2, name: 'Deep Study / Coding (2 hours)', streak: 3, doneToday: false },
+        { id: 3, name: 'Drink 8 Glasses of Water', streak: 4, doneToday: false }
+      ],
+      flashcards: [
+        { q: 'What is the speed of light in vacuum?', a: 'Approximately 299,792 km per second.' }
+      ],
+      countdowns: [
+        { title: 'Final Project Submission', date: '2026-12-01' }
+      ],
+      paperStyle: 'paper-ruled',
+      theme: 'dark'
+    };
 
-    function openTab(tabId) {
-      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById(tabId).classList.add('active');
+    let currentTool = 'WRITE_NOTE';
+    let editingNoteId = null;
 
-      if (tabId === 'tabCode') document.getElementById('btnCode').classList.add('active');
-      if (tabId === 'tabPreview') {
-        document.getElementById('btnPreview').classList.add('active');
-        document.getElementById('previewFrame').srcdoc = document.getElementById('htmlInput').value;
+    // Undo / Redo Stacks
+    let noteUndoStack = [];
+    let noteRedoStack = [];
+    let tickUndoStack = [];
+    let tickRedoStack = [];
+    let sketchUndoStack = [];
+    let sketchRedoStack = [];
+
+    // Runtime States
+    let timerInterval = null;
+    let timerSeconds = 1500;
+    let swInterval = null;
+    let swSeconds = 0;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordedAudioUrl = null;
+
+    function initApp() {
+      const saved = localStorage.getItem(DB_KEY);
+      if (saved) {
+        try { db = Object.assign(db, JSON.parse(saved)); } catch (e) {}
       }
-      if (tabId === 'tabBuild') document.getElementById('btnBuild').classList.add('active');
+      document.documentElement.setAttribute('data-theme', db.theme || 'dark');
+      updateSavedBadge();
+      openTool('WRITE_NOTE');
     }
 
-    async function pasteCode() {
-      try {
-        const text = await navigator.clipboard.readText();
-        if (text) document.getElementById('htmlInput').value = text;
-      } catch {
-        alert('Long-press inside the text box and tap Paste.');
+    function saveDb() {
+      localStorage.setItem(DB_KEY, JSON.stringify(db));
+      updateSavedBadge();
+    }
+
+    function updateSavedBadge() {
+      const b = document.getElementById('savedCountBadge');
+      if (b) b.textContent = db.notes.length;
+    }
+
+    function toggleTheme() {
+      db.theme = db.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', db.theme);
+      saveDb();
+    }
+
+    function toggleDrawer(force) {
+      const dr = document.getElementById('drawer');
+      const bd = document.getElementById('drawerBackdrop');
+      const open = force !== undefined ? force : !dr.classList.contains('open');
+      dr.classList.toggle('open', open);
+      bd.classList.toggle('open', open);
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    // Global Header Undo / Redo Dispatcher
+    function triggerGlobalUndo() {
+      if (currentTool === 'WRITE_NOTE') noteEditorUndo();
+      else if (currentTool === 'TICK_LIST') tickListUndo();
+      else if (currentTool === 'SKETCHPAD') sketchUndo();
+      else showToast('Undo is active in Write Note, Tick List & Sketchpad');
+    }
+
+    function triggerGlobalRedo() {
+      if (currentTool === 'WRITE_NOTE') noteEditorRedo();
+      else if (currentTool === 'TICK_LIST') tickListRedo();
+      else if (currentTool === 'SKETCHPAD') sketchRedo();
+      else showToast('Redo is active in Write Note, Tick List & Sketchpad');
+    }
+
+    function openTool(toolId) {
+      currentTool = toolId;
+      toggleDrawer(false);
+      document.querySelectorAll('.drawer-item').forEach(el => {
+        el.classList.toggle('active', el.getAttribute('data-tool') === toolId);
+      });
+
+      // Hide Ad Banner inside Write Note editor so typing is never disturbed
+      const adEl = document.getElementById('adFooter');
+      if (adEl) adEl.style.display = (toolId === 'WRITE_NOTE') ? 'none' : 'flex';
+
+      const ws = document.getElementById('workspace');
+      switch (toolId) {
+        case 'SAVED_NOTES': renderSavedNotes(ws); break;
+        case 'WRITE_NOTE': renderWriteNote(ws); break;
+        case 'TITLE_LIST': renderTitleList(ws); break;
+        case 'TICK_LIST': renderTickList(ws); break;
+        case 'POSTER_STUDIO': renderPosterStudio(ws); break;
+        case 'PHOTO_STUDIO': renderPhotoStudio(ws); break;
+        case 'PDF_TOOL': renderPdfTool(ws); break;
+        case 'CREDIT_LEDGER': renderCreditLedger(ws); break;
+        case 'SCI_CALC': renderSciCalc(ws); break;
+        case 'CALC_TABLE': renderCalcTable(ws); break;
+        case 'BUDGET': renderBudgetPlanner(ws); break;
+        case 'EMI_CALC': renderEmiCalc(ws); break;
+        case 'BILL_SPLIT': renderBillSplitter(ws); break;
+        case 'GHOST_VAULT': renderGhostVault(ws); break;
+        case 'ID_WALLET': renderIdWallet(ws); break;
+        case 'PASS_MANAGER': renderPasswordManager(ws); break;
+        case 'VOICE_REC': renderVoiceRecorder(ws); break;
+        case 'FOCUS_TIMER': renderFocusTimer(ws); break;
+        case 'SKETCHPAD': renderSketchpad(ws); break;
+        case 'HABIT_TRACKER': renderHabitTracker(ws); break;
+        case 'FLASHCARDS': renderFlashcards(ws); break;
+        case 'COUNTDOWN': renderCountdown(ws); break;
+        case 'CONVERTER': renderConverter(ws); break;
+        case 'AGE_BMI': renderAgeBmi(ws); break;
+        case 'QR_BACKUP': renderQrBackup(ws); break;
       }
     }
 
-    function loadSample() {
-      document.getElementById('htmlInput').value = sampleHtml;
+    /* ==========================================
+       1. SAVED NOTES / ITEMS (WITH PIN, SEARCH & AUDIO READER)
+       ========================================== */
+    function renderSavedNotes(ws) {
+      ws.innerHTML = `
+        <div class="section-title">
+          <span>📁 Saved Notes / Items (${db.notes.length})</span>
+          <button class="btn btn-primary" onclick="editingNoteId=null;openTool('WRITE_NOTE')">＋ New Note</button>
+        </div>
+        <input class="input" type="text" placeholder="🔍 Search saved notes by title, content or type..." oninput="filterSavedList(this.value)" />
+        <div id="savedListContainer"></div>
+      `;
+      filterSavedList('');
     }
 
-    // ==========================================================
-    // ENGINE 1: IN-BROWSER APK BINARY HTML INJECTOR
-    // ==========================================================
-    let loadedApkFile = null;
+    function filterSavedList(q) {
+      const box = document.getElementById('savedListContainer');
+      if (!box) return;
+      const query = (q || '').toLowerCase();
+      const sorted = [...db.notes].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.date - a.date);
+      const filtered = sorted.filter(n =>
+        (n.title || '').toLowerCase().includes(query) ||
+        (n.content || '').toLowerCase().includes(query) ||
+        (n.type || '').toLowerCase().includes(query)
+      );
 
-    function checkBaseApk(input) {
-      loadedApkFile = input.files[0];
-      const log = document.getElementById('apkInjectorStatus');
-      if (loadedApkFile) {
-        log.style.display = 'block';
-        log.textContent = `✔ Loaded Base APK: ${loadedApkFile.name} (${(loadedApkFile.size / 1024).toFixed(1)} KB)\nClick "Build & Download .APK" to inject your HTML.`;
-      }
-    }
-
-    async function injectHtmlIntoApk() {
-      const log = document.getElementById('apkInjectorStatus');
-      log.style.display = 'block';
-
-      if (!loadedApkFile) {
-        log.textContent = '⚠ Please select a Base WebView .APK file first (Step 1).';
+      if (!filtered.length) {
+        box.innerHTML = `<div class="card" style="text-align:center;color:var(--text-muted);padding:36px 14px;">No saved items yet. Tap "Write Note" to create your first note!</div>`;
         return;
       }
 
-      try {
-        log.textContent = '⏳ Reading APK binary archive...';
-        const zip = await JSZip.loadAsync(loadedApkFile);
+      box.innerHTML = filtered.map(n => `
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+            <div>
+              <span class="badge badge-pin">${esc(n.type || 'NOTE')}</span>
+              ${n.pinned ? `<span class="badge badge-hot">📌 PINNED</span>` : ''}
+              <h3 style="margin:6px 0 4px;font-size:17px;">${esc(n.title || 'Untitled')}</h3>
+            </div>
+            <span style="font-size:11px;color:var(--text-muted);">${new Date(n.date).toLocaleDateString()}</span>
+          </div>
+          ${n.image ? `<img src="${n.image}" class="photo-preview-box" style="max-height:160px;" />` : ''}
+          <div style="font-size:14px;color:var(--text-muted);white-space:pre-wrap;max-height:120px;overflow:hidden;margin-bottom:12px;">${esc(n.content || '')}</div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="editingNoteId='${n.id}';openTool('WRITE_NOTE')">✏️ Edit</button>
+            <button class="btn" onclick="togglePinSaved('${n.id}')">${n.pinned ? 'Unpin' : '📌 Pin'}</button>
+            <button class="btn" onclick="speakText('${esc(n.title)}. ${esc(n.content)}')">🔊 Listen</button>
+            <button class="btn" onclick="openNoteInPoster('${n.id}')">🖼️ Poster</button>
+            <button class="btn" onclick="shareSavedNote('${n.id}')">📤 Share</button>
+            <button class="btn btn-danger" onclick="deleteSavedNote('${n.id}')">🗑️</button>
+          </div>
+        </div>
+      `).join('');
+    }
 
-        // Remove old META-INF signatures so Android Signer tools can cleanly re-sign it
-        Object.keys(zip.files).forEach(filename => {
-          if (filename.startsWith('META-INF/') && (filename.endsWith('.SF') || filename.endsWith('.RSA') || filename.endsWith('.DSA') || filename.endsWith('.MF'))) {
-            zip.remove(filename);
-          }
-        });
+    function togglePinSaved(id) {
+      const n = db.notes.find(x => x.id === id);
+      if (n) { n.pinned = !n.pinned; saveDb(); filterSavedList(''); }
+    }
 
-        // Inject user's pasted HTML into assets/index.html
-        const htmlContent = document.getElementById('htmlInput').value;
-        zip.file('assets/index.html', htmlContent);
+    function speakText(txt) {
+      if (!('speechSynthesis' in window)) { showToast('Text-to-Speech is not supported on this device'); return; }
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(txt);
+      u.lang = 'en-US';
+      window.speechSynthesis.speak(u);
+      showToast('🔊 Reading note aloud...');
+    }
 
-        log.textContent = '⏳ Repackaging new .APK binary...';
-        const apkBlob = await zip.generateAsync({
-          type: 'blob',
-          mimeType: 'application/vnd.android.package-archive',
-          compression: 'DEFLATE'
-        });
+    function openNoteInPoster(id) {
+      const n = db.notes.find(x => x.id === id);
+      if (!n) return;
+      openTool('POSTER_STUDIO');
+      setTimeout(() => {
+        document.getElementById('posterHeading').value = n.title || '';
+        document.getElementById('posterBody').value = n.content || '';
+        drawPosterCanvas();
+      }, 60);
+    }
 
-        const appName = (document.getElementById('appName').value || '5ft_app').replace(/\s+/g, '_').toLowerCase();
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(apkBlob);
-        a.download = `${appName}_unsigned.apk`;
-        a.click();
+    function shareSavedNote(id) {
+      const n = db.notes.find(x => x.id === id);
+      if (!n) return;
+      const t = `${n.title}\n\n${n.content}`;
+      if (navigator.share) navigator.share({ title: n.title, text: t }).catch(() => {});
+      else { navigator.clipboard.writeText(t); showToast('Copied to clipboard!'); }
+    }
 
-        log.textContent = `✅ SUCCESS! Downloaded "${appName}_unsigned.apk".\n\nIMPORTANT FINAL STEP ON ANDROID:\nBecause Android requires cryptographic signatures on modified APKs, open the free "APK Signer" or "NP Manager" app on your phone, select "${appName}_unsigned.apk", tap "Sign APK", and install!`;
-      } catch (err) {
-        log.textContent = '❌ Error modifying APK: ' + err.message;
+    function deleteSavedNote(id) {
+      if (!confirm('Are you sure you want to delete this note?')) return;
+      db.notes = db.notes.filter(x => x.id !== id);
+      saveDb();
+      filterSavedList('');
+    }
+
+    /* ==========================================
+       2. WRITE NOTE (UNDO/REDO + INLINE MATH + TEMPLATES + VOICE)
+       ========================================== */
+    function renderWriteNote(ws) {
+      const ex = editingNoteId ? db.notes.find(x => x.id === editingNoteId) : null;
+      const initTitle = ex ? ex.title : '';
+      const initBody = ex ? ex.content : '';
+      noteUndoStack = [{ title: initTitle, content: initBody }];
+      noteRedoStack = [];
+
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title">
+            <span>📝 ${ex ? 'Edit Note' : 'Write Note'}</span>
+            <div style="display:flex;gap:6px;">
+              <button class="btn" onclick="noteEditorUndo()" title="Undo">↶ Undo</button>
+              <button class="btn" onclick="noteEditorRedo()" title="Redo">↷ Redo</button>
+              <button class="btn btn-success" onclick="saveCurrentNote()">💾 Save</button>
+            </div>
+          </div>
+
+          <input id="noteTitle" class="input" type="text" placeholder="Note Title..." value="${esc(initTitle)}" oninput="recordNoteHistory()" />
+
+          <!-- Ready Templates & Paper Texture Strip -->
+          <div class="toolbar">
+            <button class="tool-chip" onclick="applyNoteTemplate('GROCERY')">🛒 Grocery List</button>
+            <button class="tool-chip" onclick="applyNoteTemplate('ROUTINE')">📅 Daily Planner</button>
+            <button class="tool-chip" onclick="applyNoteTemplate('MEETING')">💼 Meeting Notes</button>
+            <button class="tool-chip" onclick="cyclePaperStyle()">📄 Switch Paper Lines</button>
+          </div>
+
+          <!-- Smart Lists, Inline Calculator & Voice Toolbar -->
+          <div class="toolbar">
+            <button class="tool-chip" onclick="insertNotePrefix('1. ')">1. Numbered</button>
+            <button class="tool-chip" onclick="insertNotePrefix('• ')">• Bullet</button>
+            <button class="tool-chip" onclick="insertNotePrefix('☐ ')">☐ Tick Box</button>
+            <button class="tool-chip" onclick="insertNotePrefix('☑ ')">☑ Done</button>
+            <button class="tool-chip" onclick="insertNotePrefix('a. ')">a. Alpha</button>
+            <button class="tool-chip" onclick="insertNotePrefix('i. ')">i. Roman</button>
+            <button class="tool-chip" onclick="insertNotePrefix('⚀ ')">⚀ Dice</button>
+            <button class="tool-chip" style="background:var(--amber);color:#000;" onclick="solveInlineMath()">🧮 = Auto Sum</button>
+            <button class="tool-chip" onclick="startNoteVoice()">🎙️ Voice Type</button>
+            <button class="tool-chip" onclick="readCurrentEditorNote()">🔊 Listen</button>
+            <button class="tool-chip" onclick="document.getElementById('noteImgInput').click()">🖼️ Photo</button>
+          </div>
+
+          <input id="noteImgInput" type="file" accept="image/*" style="display:none;" onchange="attachNoteImage(event)" />
+          <div id="noteImgPreviewWrap" style="display:${ex && ex.image ? 'block' : 'none'};margin-bottom:8px;">
+            <img id="noteImgPreview" src="${ex && ex.image ? ex.image : ''}" class="photo-preview-box" />
+            <button class="btn btn-danger" onclick="removeNoteImage()">✕ Remove Photo</button>
+          </div>
+
+          <textarea id="noteContent" class="textarea ${db.paperStyle || 'paper-ruled'}" style="min-height:230px;" placeholder="Start writing here... (Tip: Type numbers in your note and tap '🧮 = Auto Sum' to calculate the total automatically!)" oninput="recordNoteHistory();updateNoteStats()" onkeydown="handleSmartEnter(event)">${esc(initBody)}</textarea>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text-muted);margin-bottom:10px;">
+            <span id="noteStatsText">0 words • 0 chars</span>
+            <span style="color:var(--accent);">Undo/Redo & Auto-Backup Active ✓</span>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="saveCurrentNote()">💾 Save Note</button>
+            <button class="btn" onclick="sendEditorToPoster()">🖼️ Make Poster Card</button>
+            <button class="btn" onclick="copyEditorNote()">📋 Copy</button>
+            <button class="btn btn-danger" onclick="clearEditorNote()">🧹 Clear</button>
+          </div>
+        </div>
+      `;
+      updateNoteStats();
+    }
+
+    function recordNoteHistory() {
+      const title = document.getElementById('noteTitle')?.value || '';
+      const content = document.getElementById('noteContent')?.value || '';
+      const last = noteUndoStack[noteUndoStack.length - 1];
+      if (!last || last.title !== title || last.content !== content) {
+        noteUndoStack.push({ title, content });
+        if (noteUndoStack.length > 50) noteUndoStack.shift();
+        noteRedoStack = [];
       }
     }
 
-    // ==========================================================
-    // ENGINE 2: REAL SIGNED ANDROID SDK COMPILER (GITHUB / ZIP)
-    // ==========================================================
-    function getAndroidProjectFiles() {
-      const appName = document.getElementById('appName').value || 'My 5ft App';
-      const pkg = document.getElementById('pkgName').value || 'com.fiveft.customapp';
-      const pkgPath = pkg.replace(/\./g, '/');
-      const htmlContent = document.getElementById('htmlInput').value;
-
-      return {
-        'settings.gradle': `rootProject.name = "5ftApp"\ninclude ':app'`,
-        'build.gradle': `buildscript {\n    repositories { google(); mavenCentral() }\n    dependencies { classpath 'com.android.tools.build:gradle:8.2.0' }\n}\nallprojects {\n    repositories { google(); mavenCentral() }\n}`,
-        'app/build.gradle': `plugins {\n    id 'com.android.application'\n}\nandroid {\n    namespace '${pkg}'\n    compileSdk 34\n    defaultConfig {\n        applicationId "${pkg}"\n        minSdk 21\n        targetSdk 34\n        versionCode 1\n        versionName "1.0"\n    }\n}`,
-        'app/src/main/AndroidManifest.xml': `<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <uses-permission android:name="android.permission.INTERNET" />
-    <application
-        android:label="${appName}"
-        android:usesCleartextTraffic="true"
-        android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
-        <activity android:name=".MainActivity" android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
-</manifest>`,
-        [`app/src/main/java/${pkgPath}/MainActivity.java`]: `package ${pkg};
-import android.app.Activity;
-import android.os.Bundle;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-
-public class MainActivity extends Activity {
-    private WebView webView;
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        webView = new WebView(this);
-        setContentView(webView);
-        WebSettings ws = webView.getSettings();
-        ws.setJavaScriptEnabled(true);
-        ws.setDomStorageEnabled(true);
-        webView.setWebViewClient(new WebViewClient());
-        webView.loadUrl("file:///android_asset/index.html");
+    function noteEditorUndo() {
+      if (noteUndoStack.length <= 1) { showToast('Nothing more to undo'); return; }
+      const current = noteUndoStack.pop();
+      noteRedoStack.push(current);
+      const prev = noteUndoStack[noteUndoStack.length - 1];
+      document.getElementById('noteTitle').value = prev.title;
+      document.getElementById('noteContent').value = prev.content;
+      updateNoteStats();
+      showToast('↶ Undone');
     }
-    @Override
-    public void onBackPressed() {
-        if (webView.canGoBack()) webView.goBack();
-        else super.onBackPressed();
+
+    function noteEditorRedo() {
+      if (!noteRedoStack.length) { showToast('Nothing more to redo'); return; }
+      const next = noteRedoStack.pop();
+      noteUndoStack.push(next);
+      document.getElementById('noteTitle').value = next.title;
+      document.getElementById('noteContent').value = next.content;
+      updateNoteStats();
+      showToast('↷ Redone');
     }
-}`,
-        'app/src/main/assets/index.html': htmlContent,
-        '.github/workflows/build-apk.yml': `name: Build Signed Android APK
-on: [push, workflow_dispatch]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.7'
-      - name: Compile Signed APK
-        run: gradle assembleDebug
-      - name: Upload Ready APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: 5ft-Signed-APK
-          path: app/build/outputs/apk/debug/app-debug.apk`
+
+    function cyclePaperStyle() {
+      const styles = ['paper-ruled', 'paper-grid', 'paper-plain'];
+      const next = styles[(styles.indexOf(db.paperStyle) + 1) % styles.length];
+      db.paperStyle = next;
+      saveDb();
+      const area = document.getElementById('noteContent');
+      if (area) area.className = `textarea ${next}`;
+      showToast('Paper style updated');
+    }
+
+    function applyNoteTemplate(tpl) {
+      const tEl = document.getElementById('noteTitle');
+      const bEl = document.getElementById('noteContent');
+      if (tpl === 'GROCERY') {
+        tEl.value = '🛒 Weekly Grocery List';
+        bEl.value = '☐ Rice (5 kg) - 350\n☐ Cooking Oil (2L) - 360\n☐ Fresh Milk & Eggs - 220\n☐ Vegetables & Fruits - 450\n☐ Bread & Snacks - 150';
+      } else if (tpl === 'ROUTINE') {
+        tEl.value = '📅 Daily Schedule & Priorities';
+        bEl.value = '1. 06:30 AM - Wake up, hydrate & exercise\n2. 08:00 AM - Breakfast & review top 3 goals\n3. 09:00 AM - Deep focus work / study block\n4. 09:30 PM - Wrap up & plan for tomorrow';
+      } else if (tpl === 'MEETING') {
+        tEl.value = '💼 Project Meeting Notes';
+        bEl.value = 'Date: ' + new Date().toLocaleDateString() + '\nAgenda:\n• Review current project milestones\n• Assign next action items\n\nAction Items:\n☐ Finalize UI design\n☐ Test mobile build';
+      }
+      recordNoteHistory();
+      updateNoteStats();
+    }
+
+    // Inline Math Calculator inside Note Editor
+    function solveInlineMath() {
+      const area = document.getElementById('noteContent');
+      if (!area) return;
+      const text = area.value;
+      const numbers = text.match(/\d+(\.\d+)?/g);
+      if (!numbers || !numbers.length) {
+        showToast('No numbers found in note to sum');
+        return;
+      }
+      const total = numbers.reduce((acc, n) => acc + parseFloat(n), 0);
+      area.value = text.trimEnd() + `\n----------------------\nTotal Sum = ${total}`;
+      recordNoteHistory();
+      updateNoteStats();
+      showToast(`Calculated Total = ${total}`);
+    }
+
+    function insertNotePrefix(prefix) {
+      const area = document.getElementById('noteContent');
+      const start = area.selectionStart;
+      const val = area.value;
+      const before = val.substring(0, start);
+      const after = val.substring(area.selectionEnd);
+      const nl = before.length > 0 && !before.endsWith('\n') ? '\n' : '';
+      area.value = before + nl + prefix + after;
+      area.focus();
+      recordNoteHistory();
+      updateNoteStats();
+    }
+
+    function handleSmartEnter(e) {
+      if (e.key !== 'Enter') return;
+      const area = e.target;
+      const pos = area.selectionStart;
+      const before = area.value.substring(0, pos);
+      const lines = before.split('\n');
+      const cur = lines[lines.length - 1];
+
+      const numMatch = cur.match(/^(\d+)\.\s+(.*)/);
+      const symMatch = cur.match(/^([•☐☑⚀])\s+(.*)/);
+
+      if (numMatch) {
+        e.preventDefault();
+        if (!numMatch[2].trim()) {
+          area.value = before.substring(0, before.length - cur.length) + area.value.substring(pos);
+          return;
+        }
+        const ins = `\n${parseInt(numMatch[1], 10) + 1}. `;
+        area.value = before + ins + area.value.substring(pos);
+        area.selectionStart = area.selectionEnd = pos + ins.length;
+        recordNoteHistory();
+      } else if (symMatch) {
+        e.preventDefault();
+        if (!symMatch[2].trim()) {
+          area.value = before.substring(0, before.length - cur.length) + area.value.substring(pos);
+          return;
+        }
+        const m = symMatch[1] === '☑' ? '☐' : symMatch[1];
+        const ins = `\n${m} `;
+        area.value = before + ins + area.value.substring(pos);
+        area.selectionStart = area.selectionEnd = pos + ins.length;
+        recordNoteHistory();
+      }
+    }
+
+    function attachNoteImage(e) {
+      const f = e.target.files[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = (ev) => {
+        document.getElementById('noteImgPreview').src = ev.target.result;
+        document.getElementById('noteImgPreviewWrap').style.display = 'block';
+      };
+      r.readAsDataURL(f);
+    }
+
+    function removeNoteImage() {
+      document.getElementById('noteImgPreview').src = '';
+      document.getElementById('noteImgPreviewWrap').style.display = 'none';
+    }
+
+    function startNoteVoice() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) { showToast('Voice typing is not supported on this browser'); return; }
+      const rec = new SR();
+      rec.lang = 'en-US';
+      showToast('🎙️ Listening... Speak now');
+      rec.onresult = (ev) => {
+        const area = document.getElementById('noteContent');
+        area.value += (area.value ? ' ' : '') + ev.results[0][0].transcript;
+        recordNoteHistory();
+        updateNoteStats();
+      };
+      rec.start();
+    }
+
+    function readCurrentEditorNote() {
+      const t = document.getElementById('noteTitle')?.value || '';
+      const b = document.getElementById('noteContent')?.value || '';
+      speakText(t + '. ' + b);
+    }
+
+    function updateNoteStats() {
+      const txt = (document.getElementById('noteContent')?.value || '').trim();
+      const words = txt ? txt.split(/\s+/).length : 0;
+      const el = document.getElementById('noteStatsText');
+      if (el) el.textContent = `${words} words • ${txt.length} chars`;
+    }
+
+    function saveCurrentNote() {
+      const title = document.getElementById('noteTitle').value.trim() || 'Untitled Note';
+      const content = document.getElementById('noteContent').value.trim();
+      const wrap = document.getElementById('noteImgPreviewWrap');
+      const img = (wrap && wrap.style.display !== 'none') ? document.getElementById('noteImgPreview').src : '';
+
+      if (!content && !img) { showToast('Please write something before saving'); return; }
+
+      if (editingNoteId) {
+        const idx = db.notes.findIndex(x => x.id === editingNoteId);
+        if (idx >= 0) db.notes[idx] = { ...db.notes[idx], title, content, image: img, date: Date.now() };
+        editingNoteId = null;
+      } else {
+        db.notes.unshift({
+          id: 'n_' + Date.now(),
+          type: img ? 'PHOTO NOTE' : 'NOTE',
+          title,
+          content,
+          image: img,
+          pinned: false,
+          date: Date.now()
+        });
+      }
+      saveDb();
+      showToast('Note Saved Successfully!');
+      openTool('SAVED_NOTES');
+    }
+
+    function sendEditorToPoster() {
+      const t = document.getElementById('noteTitle').value || '5ft NOTE';
+      const b = document.getElementById('noteContent').value || '';
+      openTool('POSTER_STUDIO');
+      setTimeout(() => {
+        document.getElementById('posterHeading').value = t;
+        document.getElementById('posterBody').value = b;
+        drawPosterCanvas();
+      }, 60);
+    }
+
+    function copyEditorNote() {
+      navigator.clipboard.writeText(document.getElementById('noteContent').value);
+      showToast('Copied to clipboard!');
+    }
+
+    function clearEditorNote() {
+      recordNoteHistory();
+      document.getElementById('noteTitle').value = '';
+      document.getElementById('noteContent').value = '';
+      recordNoteHistory();
+      updateNoteStats();
+    }
+
+    /* ==========================================
+       3. NOTE TO SOCIAL POSTER CARD (.PNG DOWNLOADER)
+       ========================================== */
+    let posterThemeIdx = 0;
+    const POSTER_GRADIENTS = [
+      ['#1E3A8A', '#0F172A', '#FFFFFF'],
+      ['#065F46', '#064E3B', '#ECFDF5'],
+      ['#701A75', '#3B0764', '#FDF4FF'],
+      ['#9A3412', '#431407', '#FFF7ED'],
+      ['#F8FAFC', '#E2E8F0', '#0F172A']
+    ];
+
+    function renderPosterStudio(ws) {
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title">
+            <span>🖼️ Note to Social Poster (.PNG)</span>
+            <button class="btn btn-success" onclick="downloadPosterPng()">⬇️ Download PNG</button>
+          </div>
+          <input id="posterHeading" class="input" type="text" placeholder="Poster Heading..." value="Daily Inspiration" oninput="drawPosterCanvas()" />
+          <textarea id="posterBody" class="textarea" style="min-height:90px;" placeholder="Write quote or note text..." oninput="drawPosterCanvas()">Simplicity is the ultimate sophistication. Small daily improvements lead to stunning results.</textarea>
+          <div class="btn-row" style="margin-bottom:12px;">
+            <button class="btn btn-primary" onclick="posterThemeIdx=(posterThemeIdx+1)%POSTER_GRADIENTS.length;drawPosterCanvas()">🎨 Change Background Theme</button>
+            <button class="btn btn-success" onclick="downloadPosterPng()">⬇️ Save Image (.PNG)</button>
+          </div>
+          <canvas id="posterCanvas" width="600" height="420" style="width:100%;border-radius:12px;border:1px solid var(--border);"></canvas>
+        </div>
+      `;
+      setTimeout(drawPosterCanvas, 40);
+    }
+
+    function drawPosterCanvas() {
+      const c = document.getElementById('posterCanvas');
+      if (!c) return;
+      const ctx = c.getContext('2d');
+      const [c1, c2, txtColor] = POSTER_GRADIENTS[posterThemeIdx];
+
+      const grad = ctx.createLinearGradient(0, 0, c.width, c.height);
+      grad.addColorStop(0, c1);
+      grad.addColorStop(1, c2);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, c.width, c.height);
+
+      ctx.fillStyle = txtColor;
+      ctx.font = 'bold 28px sans-serif';
+      const title = document.getElementById('posterHeading')?.value || '';
+      ctx.fillText(title, 40, 65);
+
+      ctx.font = '21px sans-serif';
+      const body = document.getElementById('posterBody')?.value || '';
+      const words = body.split(' ');
+      let line = '';
+      let y = 130;
+      for (let i = 0; i < words.length; i++) {
+        const test = line + words[i] + ' ';
+        if (ctx.measureText(test).width > 520 && i > 0) {
+          ctx.fillText(line, 40, y);
+          line = words[i] + ' ';
+          y += 34;
+        } else {
+          line = test;
+        }
+      }
+      ctx.fillText(line, 40, y);
+
+      ctx.font = 'bold 14px sans-serif';
+      ctx.globalAlpha = 0.65;
+      ctx.fillText('Created with 5ft NOTE', 40, 390);
+      ctx.globalAlpha = 1;
+    }
+
+    function downloadPosterPng() {
+      const c = document.getElementById('posterCanvas');
+      if (!c) return;
+      const a = document.createElement('a');
+      a.href = c.toDataURL('image/png');
+      a.download = '5ft_note_poster.png';
+      a.click();
+      showToast('Poster PNG Downloaded!');
+    }
+
+    /* ==========================================
+       4. SIMPLE TITLE LIST
+       ========================================== */
+    function renderTitleList(ws) {
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title">
+            <span>📄 Simple Title List</span>
+            <button class="btn btn-success" onclick="saveTitleListToNotes()">💾 Save to Notes</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <input id="quickTitleInput" class="input" style="margin:0;" type="text" placeholder="Add new item title..." onkeydown="if(event.key==='Enter')addQuickTitle()" />
+            <button class="btn btn-primary" onclick="addQuickTitle()">＋ Add</button>
+          </div>
+          <div id="titleListItems"></div>
+        </div>
+      `;
+      renderTitleItems();
+    }
+
+    function renderTitleItems() {
+      const box = document.getElementById('titleListItems');
+      if (!box) return;
+      box.innerHTML = db.titleList.map((t, i) => `
+        <div class="tick-item">
+          <span style="font-weight:800;color:var(--header-blue);">${i + 1}.</span>
+          <span class="tick-text">${esc(t)}</span>
+          <button class="btn btn-danger" style="padding:4px 9px;" onclick="db.titleList.splice(${i},1);saveDb();renderTitleItems()">✕</button>
+        </div>
+      `).join('') || `<div style="text-align:center;color:var(--text-muted);padding:16px;">No items in the list yet.</div>`;
+    }
+
+    function addQuickTitle() {
+      const inp = document.getElementById('quickTitleInput');
+      if (!inp.value.trim()) return;
+      db.titleList.push(inp.value.trim());
+      inp.value = '';
+      saveDb();
+      renderTitleItems();
+    }
+
+    function saveTitleListToNotes() {
+      if (!db.titleList.length) return;
+      db.notes.unshift({
+        id: 'n_' + Date.now(),
+        type: 'TITLE LIST',
+        title: 'Simple Title List (' + db.titleList.length + ')',
+        content: db.titleList.map((t, i) => `${i + 1}. ${t}`).join('\n'),
+        date: Date.now()
+      });
+      saveDb();
+      showToast('Saved to Notes!');
+    }
+
+    /* ==========================================
+       5. SPECIAL TICK-MARK LIST (WITH UNDO/REDO & STRIKETHROUGH)
+       ========================================== */
+    function pushTickUndo() {
+      tickUndoStack.push(JSON.stringify(db.tickList));
+      if (tickUndoStack.length > 30) tickUndoStack.shift();
+      tickRedoStack = [];
+    }
+
+    function tickListUndo() {
+      if (!tickUndoStack.length) { showToast('Nothing more to undo'); return; }
+      tickRedoStack.push(JSON.stringify(db.tickList));
+      db.tickList = JSON.parse(tickUndoStack.pop());
+      saveDb();
+      renderTickList(document.getElementById('workspace'));
+      showToast('↶ Checklist Undo');
+    }
+
+    function tickListRedo() {
+      if (!tickRedoStack.length) { showToast('Nothing more to redo'); return; }
+      tickUndoStack.push(JSON.stringify(db.tickList));
+      db.tickList = JSON.parse(tickRedoStack.pop());
+      saveDb();
+      renderTickList(document.getElementById('workspace'));
+      showToast('↷ Checklist Redo');
+    }
+
+    function renderTickList(ws) {
+      const total = db.tickList.length;
+      const done = db.tickList.filter(x => x.done).length;
+      const pct = total ? Math.round((done / total) * 100) : 0;
+
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title">
+            <span>✅ Special Tick-Mark List (${pct}%)</span>
+            <div style="display:flex;gap:5px;">
+              <button class="btn" onclick="tickListUndo()" title="Undo">↶</button>
+              <button class="btn" onclick="tickListRedo()" title="Redo">↷</button>
+              <button class="btn btn-success" onclick="saveTicksToNotes()">💾 Save</button>
+            </div>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" style="width:${pct}%"></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <input id="tickInput" class="input" style="margin:0;" type="text" placeholder="Add a new checklist task..." onkeydown="if(event.key==='Enter')addTick()" />
+            <button class="btn btn-primary" onclick="addTick()">＋ Add</button>
+          </div>
+          <div>
+            ${db.tickList.map((item, idx) => `
+              <div class="tick-item">
+                <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleTick(${idx})" />
+                <span class="tick-text ${item.done ? 'done' : ''}">${esc(item.text)}</span>
+                <button class="btn btn-danger" style="padding:4px 9px;" onclick="removeTick(${idx})">✕</button>
+              </div>
+            `).join('')}
+          </div>
+          <div class="btn-row" style="margin-top:10px;">
+            <button class="btn" onclick="clearCompletedTicks()">🧹 Clear Completed Items</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function addTick() {
+      const inp = document.getElementById('tickInput');
+      if (!inp.value.trim()) return;
+      pushTickUndo();
+      db.tickList.push({ id: Date.now(), text: inp.value.trim(), done: false });
+      inp.value = '';
+      saveDb();
+      renderTickList(document.getElementById('workspace'));
+    }
+
+    function toggleTick(idx) {
+      pushTickUndo();
+      db.tickList[idx].done = !db.tickList[idx].done;
+      saveDb();
+      renderTickList(document.getElementById('workspace'));
+    }
+
+    function removeTick(idx) {
+      pushTickUndo();
+      db.tickList.splice(idx, 1);
+      saveDb();
+      renderTickList(document.getElementById('workspace'));
+    }
+
+    function clearCompletedTicks() {
+      pushTickUndo();
+      db.tickList = db.tickList.filter(x => !x.done);
+      saveDb();
+      renderTickList(document.getElementById('workspace'));
+    }
+
+    function saveTicksToNotes() {
+      if (!db.tickList.length) return;
+      db.notes.unshift({
+        id: 'n_' + Date.now(),
+        type: 'CHECKLIST',
+        title: 'Tick-Mark List (' + db.tickList.length + ')',
+        content: db.tickList.map(x => `${x.done ? '☑' : '☐'} ${x.text}`).join('\n'),
+        date: Date.now()
+      });
+      saveDb();
+      showToast('Saved to Notes!');
+    }
+
+    /* ==========================================
+       6. PHOTO STUDIO & DOCUMENT SCANNER
+       ========================================== */
+    let studioImg = '';
+    let studioFilter = 'none';
+    function renderPhotoStudio(ws) {
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title">
+            <span>📷 Photo Studio & Document Scanner</span>
+            <button class="btn btn-primary" onclick="document.getElementById('studioFile').click()">🖼️ Pick Photo</button>
+          </div>
+          <input id="studioFile" type="file" accept="image/*" style="display:none;" onchange="loadStudioImg(event)" />
+          <div style="text-align:center;padding:14px;border:2px dashed var(--border);border-radius:12px;margin-bottom:10px;">
+            ${studioImg
+              ? `<img id="studioImgEl" src="${studioImg}" class="photo-preview-box" style="filter:${studioFilter}" />`
+              : `<div style="color:var(--text-muted);padding:24px;">Pick a photo, receipt, or notebook page from Gallery or Camera</div>`
+            }
+          </div>
+          <div class="toolbar">
+            <button class="tool-chip" onclick="setStudioFilter('none')">Normal</button>
+            <button class="tool-chip" onclick="setStudioFilter('contrast(1.4) brightness(1.15)')">✨ Clear Document</button>
+            <button class="tool-chip" onclick="setStudioFilter('grayscale(100%) contrast(1.5)')">📄 B&W Photocopy</button>
+            <button class="tool-chip" onclick="setStudioFilter('sepia(65%)')">📜 Warm Vintage</button>
+          </div>
+          <input id="studioTitle" class="input" type="text" placeholder="Photo Note Title..." />
+          <textarea id="studioCaption" class="textarea" style="min-height:80px;" placeholder="Add caption, description, or extracted notes..."></textarea>
+          <button class="btn btn-success" onclick="saveStudioNote()">💾 Save Photo Note</button>
+        </div>
+      `;
+    }
+
+    function loadStudioImg(e) {
+      const f = e.target.files[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = (ev) => { studioImg = ev.target.result; renderPhotoStudio(document.getElementById('workspace')); };
+      r.readAsDataURL(f);
+    }
+
+    function setStudioFilter(f) {
+      studioFilter = f;
+      const el = document.getElementById('studioImgEl');
+      if (el) el.style.filter = f;
+    }
+
+    function saveStudioNote() {
+      if (!studioImg) { showToast('Please select a photo first'); return; }
+      db.notes.unshift({
+        id: 'n_' + Date.now(),
+        type: 'PHOTO SCAN',
+        title: document.getElementById('studioTitle').value.trim() || 'Scanned Photo Note',
+        content: document.getElementById('studioCaption').value.trim(),
+        image: studioImg,
+        date: Date.now()
+      });
+      studioImg = '';
+      saveDb();
+      showToast('Photo Note Saved!');
+      openTool('SAVED_NOTES');
+    }
+
+    /* ==========================================
+       7. PDF IMPORT & EXPORT
+       ========================================== */
+    function renderPdfTool(ws) {
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title"><span>📕 PDF & Document Import / Export</span></div>
+          <input id="pdfTitle" class="input" type="text" value="5ft NOTE Document" />
+          <textarea id="pdfBody" class="textarea" placeholder="Paste or write document content here...">${db.notes[0] ? esc(db.notes[0].content) : ''}</textarea>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="window.print()">🖨️ Export / Print PDF</button>
+            <button class="btn btn-success" onclick="exportTxtDoc()">⬇️ Download .TXT</button>
+            <button class="btn" onclick="document.getElementById('importDocFile').click()">📂 Import Text File</button>
+          </div>
+          <input id="importDocFile" type="file" accept=".txt,.md,.json" style="display:none;" onchange="handleDocImport(event)" />
+        </div>
+      `;
+    }
+
+    function exportTxtDoc() {
+      const t = document.getElementById('pdfTitle').value || 'note';
+      const b = document.getElementById('pdfBody').value || '';
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([t + '\n\n' + b], { type: 'text/plain' }));
+      a.download = t + '.txt';
+      a.click();
+    }
+
+    function handleDocImport(e) {
+      const f = e.target.files[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = (ev) => {
+        document.getElementById('pdfTitle').value = f.name;
+        document.getElementById('pdfBody').value = ev.target.result;
+        showToast('Document Imported!');
+      };
+      r.readAsText(f);
+    }
+
+    /* ==========================================
+       8. CREDIT & DEBT LEDGER
+       ========================================== */
+    function renderCreditLedger(ws) {
+      const toReceive = db.creditLedger.filter(x => x.type === 'RECEIVE').reduce((a, b) => a + b.amount, 0);
+      const toPay = db.creditLedger.filter(x => x.type === 'PAY').reduce((a, b) => a + b.amount, 0);
+
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title"><span>📓 Credit & Debt Ledger</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center;margin-bottom:12px;">
+            <div style="background:var(--surface-2);padding:12px;border-radius:11px;">
+              <div style="font-size:12px;color:var(--text-muted);">Total To Receive</div>
+              <div style="font-size:20px;font-weight:800;color:var(--accent);">+ ${toReceive}</div>
+            </div>
+            <div style="background:var(--surface-2);padding:12px;border-radius:11px;">
+              <div style="font-size:12px;color:var(--text-muted);">Total To Pay</div>
+              <div style="font-size:20px;font-weight:800;color:var(--danger);">- ${toPay}</div>
+            </div>
+          </div>
+          <input id="clName" class="input" type="text" placeholder="Person or Business Name..." />
+          <input id="clAmount" class="input" type="number" placeholder="Amount..." />
+          <input id="clNote" class="input" type="text" placeholder="Note / Reference (Optional)..." />
+          <div class="btn-row" style="margin-bottom:14px;">
+            <button class="btn btn-success" style="flex:1;" onclick="addCreditEntry('RECEIVE')">＋ I Will Receive</button>
+            <button class="btn btn-danger" style="flex:1;" onclick="addCreditEntry('PAY')">－ I Need To Pay</button>
+          </div>
+          <div>
+            ${db.creditLedger.map((item, i) => `
+              <div class="tick-item">
+                <div style="flex:1;">
+                  <b>${esc(item.name)}</b> <span style="font-size:12px;color:var(--text-muted);">(${esc(item.note || '')})</span>
+                </div>
+                <span style="font-weight:800;color:${item.type === 'RECEIVE' ? 'var(--accent)' : 'var(--danger)'};">
+                  ${item.type === 'RECEIVE' ? 'Receive +' : 'Pay -'}${item.amount}
+                </span>
+                <button class="btn" style="padding:4px 8px;" onclick="db.creditLedger.splice(${i},1);saveDb();renderCreditLedger(document.getElementById('workspace'))">✕</button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function addCreditEntry(type) {
+      const name = document.getElementById('clName').value.trim();
+      const amount = parseFloat(document.getElementById('clAmount').value);
+      const note = document.getElementById('clNote').value.trim();
+      if (!name || isNaN(amount)) return;
+      db.creditLedger.unshift({ id: Date.now(), name, amount, type, note });
+      saveDb();
+      renderCreditLedger(document.getElementById('workspace'));
+    }
+
+    /* ==========================================
+       9. SCIENTIFIC CALCULATOR
+       ========================================== */
+    let calcStr = '';
+    function renderSciCalc(ws) {
+      const keys = ['C','(',')','⌫','sin(','cos(','tan(','√(','7','8','9','÷','4','5','6','×','1','2','3','-','0','.','π','+','^','%','log(','='];
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title">
+            <span>🧮 Scientific Calculator</span>
+            <button class="btn btn-success" onclick="saveCalcResult()">💾 Save Result</button>
+          </div>
+          <div id="calcDisp" class="calc-screen">${calcStr || '0'}</div>
+          <div class="calc-grid">
+            ${keys.map(k => `<button class="calc-key ${k==='='?'eq':(['÷','×','-','+','C','⌫'].includes(k)?'op':'')}" onclick="pressSciKey('${k}')">${k}</button>`).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function pressSciKey(k) {
+      if (k === 'C') calcStr = '';
+      else if (k === '⌫') calcStr = calcStr.slice(0, -1);
+      else if (k === '=') {
+        try {
+          const expr = calcStr.replace(/×/g,'*').replace(/÷/g,'/').replace(/π/g,'Math.PI').replace(/√\(/g,'Math.sqrt(').replace(/sin\(/g,'Math.sin(').replace(/cos\(/g,'Math.cos(').replace(/tan\(/g,'Math.tan(').replace(/log\(/g,'Math.log10(').replace(/\^/g,'**');
+          calcStr = String(Number(Function('"use strict";return (' + expr + ')')().toFixed(8)));
+        } catch (e) { calcStr = 'Error'; }
+      } else {
+        if (calcStr === 'Error') calcStr = '';
+        calcStr += k;
+      }
+      const d = document.getElementById('calcDisp');
+      if (d) d.textContent = calcStr || '0';
+    }
+
+    function saveCalcResult() {
+      if (!calcStr || calcStr === 'Error') return;
+      db.notes.unshift({ id: 'n_' + Date.now(), type: 'CALCULATION', title: 'Calc Result: ' + calcStr, content: 'Calculated = ' + calcStr, date: Date.now() });
+      saveDb();
+      showToast('Saved to Notes!');
+    }
+
+    /* ==========================================
+       10. CALCULATION TABLE (2x2+)
+       ========================================== */
+    function renderCalcTable(ws) {
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title">
+            <span>📊 Calculation Table (Auto Sum)</span>
+            <button class="btn btn-success" onclick="saveTableNote()">💾 Save to Notes</button>
+          </div>
+          <div style="overflow-x:auto;"><table class="calc-table" id="gridTable"></table></div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="db.tableData.push(new Array(db.tableData[0].length).fill('0'));saveDb();updateGridTable()">＋ Add Row</button>
+            <button class="btn" onclick="db.tableData.forEach(r=>r.push('0'));saveDb();updateGridTable()">＋ Add Column</button>
+          </div>
+        </div>
+      `;
+      updateGridTable();
+    }
+
+    function updateGridTable() {
+      const tbl = document.getElementById('gridTable');
+      if (!tbl) return;
+      const cols = db.tableData[0].length;
+      let colSums = new Array(cols).fill(0);
+      let html = `<tr><th>Item</th>`;
+      for (let c = 1; c < cols; c++) html += `<th>Col ${c}</th>`;
+      html += `<th>Row Total</th></tr>`;
+
+      db.tableData.forEach((row, r) => {
+        let rSum = 0;
+        html += `<tr>`;
+        row.forEach((cell, c) => {
+          const n = parseFloat(cell);
+          if (c > 0 && !isNaN(n)) { rSum += n; colSums[c] += n; }
+          html += `<td><input value="${esc(cell)}" oninput="db.tableData[${r}][${c}]=this.value;saveDb();updateGridTable()" /></td>`;
+        });
+        html += `<td style="font-weight:800;color:var(--accent);">${rSum}</td></tr>`;
+      });
+
+      const grand = colSums.reduce((a, b) => a + b, 0);
+      html += `<tr style="font-weight:800;background:var(--surface-2);"><td>TOTAL</td>`;
+      for (let c = 1; c < cols; c++) html += `<td>${colSums[c]}</td>`;
+      html += `<td style="color:var(--header-blue);">${grand}</td></tr>`;
+      tbl.innerHTML = html;
+    }
+
+    function saveTableNote() {
+      db.notes.unshift({ id: 'n_' + Date.now(), type: 'TABLE', title: 'Calculation Table', content: db.tableData.map(r => r.join(' | ')).join('\n'), date: Date.now() });
+      saveDb();
+      showToast('Table Saved to Notes!');
+    }
+
+    /* ==========================================
+       11. MONTHLY BUDGET PLANNER
+       ========================================== */
+    function renderBudgetPlanner(ws) {
+      const inc = db.budgets.filter(b => b.type === 'INC').reduce((a, b) => a + b.amount, 0);
+      const exp = db.budgets.filter(b => b.type === 'EXP').reduce((a, b) => a + b.amount, 0);
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title"><span>💰 Monthly Budget Planner</span></div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin-bottom:12px;">
+            <div style="background:var(--surface-2);padding:10px;border-radius:10px;"><div>Income</div><b style="color:var(--accent);">+${inc}</b></div>
+            <div style="background:var(--surface-2);padding:10px;border-radius:10px;"><div>Expense</div><b style="color:var(--danger);">-${exp}</b></div>
+            <div style="background:var(--surface-2);padding:10px;border-radius:10px;"><div>Balance</div><b style="color:var(--header-blue);">${inc - exp}</b></div>
+          </div>
+          <input id="bgTitle" class="input" placeholder="Category / Description (e.g. Salary, Rent)..." />
+          <input id="bgAmt" class="input" type="number" placeholder="Amount..." />
+          <div class="btn-row" style="margin-bottom:12px;">
+            <button class="btn btn-success" style="flex:1;" onclick="addBg('INC')">＋ Add Income</button>
+            <button class="btn btn-danger" style="flex:1;" onclick="addBg('EXP')">－ Add Expense</button>
+          </div>
+          ${db.budgets.map((b, i) => `
+            <div class="tick-item">
+              <span class="tick-text">${esc(b.title)}</span>
+              <b style="color:${b.type==='INC'?'var(--accent)':'var(--danger)'}">${b.type==='INC'?'+':'-'}${b.amount}</b>
+              <button class="btn" style="padding:3px 8px;" onclick="db.budgets.splice(${i},1);saveDb();renderBudgetPlanner(document.getElementById('workspace'))">✕</button>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function addBg(type) {
+      const title = document.getElementById('bgTitle').value.trim();
+      const amount = parseFloat(document.getElementById('bgAmt').value);
+      if (!title || isNaN(amount)) return;
+      db.budgets.unshift({ title, amount, type });
+      saveDb();
+      renderBudgetPlanner(document.getElementById('workspace'));
+    }
+
+    /* ==========================================
+       12. LOAN EMI CALCULATOR
+       ========================================== */
+    function renderEmiCalc(ws) {
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title"><span>🏦 Loan EMI Calculator</span></div>
+          <input id="emiP" class="input" type="number" value="100000" placeholder="Principal Loan Amount" oninput="updateEmi()" />
+          <input id="emiR" class="input" type="number" value="9.5" placeholder="Annual Interest Rate (%)" oninput="updateEmi()" />
+          <input id="emiN" class="input" type="number" value="12" placeholder="Tenure (Months)" oninput="updateEmi()" />
+          <div id="emiBox" class="card" style="background:var(--surface-2);"></div>
+        </div>
+      `;
+      updateEmi();
+    }
+
+    function updateEmi() {
+      const P = parseFloat(document.getElementById('emiP')?.value) || 0;
+      const R = (parseFloat(document.getElementById('emiR')?.value) || 0) / 12 / 100;
+      const N = Math.max(1, parseFloat(document.getElementById('emiN')?.value) || 1);
+      const emi = R === 0 ? P / N : (P * R * Math.pow(1 + R, N)) / (Math.pow(1 + R, N) - 1);
+      const el = document.getElementById('emiBox');
+      if (el) el.innerHTML = `<b style="font-size:19px;color:var(--accent);">Monthly EMI: ${emi.toFixed(2)}</b><br><span style="font-size:13px;color:var(--text-muted);">Total Payable: ${(emi * N).toFixed(2)} (Interest: ${((emi * N) - P).toFixed(2)})</span>`;
+    }
+
+    /* ==========================================
+       13. FRIENDS BILL SPLITTER
+       ========================================== */
+    function renderBillSplitter(ws) {
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title"><span>🍕 Friends Bill Splitter</span></div>
+          <input id="bsTotal" class="input" type="number" value="1200" placeholder="Total Bill Amount" oninput="updateSplit()" />
+          <input id="bsTip" class="input" type="number" value="0" placeholder="Tip / Service Charge (%)" oninput="updateSplit()" />
+          <input id="bsPeople" class="input" type="number" value="4" placeholder="Number of Friends" oninput="updateSplit()" />
+          <div id="bsOut" class="card" style="background:var(--surface-2);font-size:19px;font-weight:800;color:var(--header-blue);"></div>
+        </div>
+      `;
+      updateSplit();
+    }
+
+    function updateSplit() {
+      const t = parseFloat(document.getElementById('bsTotal')?.value) || 0;
+      const tip = parseFloat(document.getElementById('bsTip')?.value) || 0;
+      const p = Math.max(1, parseInt(document.getElementById('bsPeople')?.value) || 1);
+      const each = (t + (t * tip / 100)) / p;
+      const el = document.getElementById('bsOut');
+      if (el) el.textContent = `Each Person Pays: ${each.toFixed(2)}`;
+    }
+
+    /* ==========================================
+       14. PRIVATE GHOST VAULT (PIN)
+       ========================================== */
+    let vaultOpen = false;
+    function renderGhostVault(ws) {
+      if (!db.vaultPin) {
+        ws.innerHTML = `<div class="card"><div class="section-title">🔒 Set Ghost Vault PIN</div><input id="vPinNew" class="input" type="password" placeholder="Create a 4-digit secret PIN..." /><button class="btn btn-primary" onclick="db.vaultPin=document.getElementById('vPinNew').value;vaultOpen=true;saveDb();renderGhostVault(document.getElementById('workspace'))">Save PIN</button></div>`;
+        return;
+      }
+      if (!vaultOpen) {
+        ws.innerHTML = `<div class="card"><div class="section-title">🔒 Unlock Ghost Vault</div><input id="vPinCheck" class="input" type="password" placeholder="Enter secret PIN..." /><button class="btn btn-primary" onclick="if(document.getElementById('vPinCheck').value===db.vaultPin){vaultOpen=true;renderGhostVault(document.getElementById('workspace'))}else{showToast('Incorrect PIN!')}">Unlock Vault</button></div>`;
+        return;
+      }
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title"><span>🔒 Private Ghost Vault</span><button class="btn btn-danger" onclick="vaultOpen=false;renderGhostVault(document.getElementById('workspace'))">Lock Vault</button></div>
+          <input id="vTitle" class="input" placeholder="Secret Note Title..." />
+          <textarea id="vBody" class="textarea" style="min-height:80px;" placeholder="Write private content..."></textarea>
+          <button class="btn btn-success" onclick="db.vaultNotes.unshift({title:document.getElementById('vTitle').value,body:document.getElementById('vBody').value});saveDb();renderGhostVault(document.getElementById('workspace'))">＋ Save Secret Note</button>
+          <div style="margin-top:12px;">
+            ${db.vaultNotes.map((v, i) => `<div class="tick-item"><div style="flex:1;"><b>${esc(v.title)}</b><br><span style="font-size:13px;color:var(--text-muted);">${esc(v.body)}</span></div><button class="btn btn-danger" onclick="db.vaultNotes.splice(${i},1);saveDb();renderGhostVault(document.getElementById('workspace'))">✕</button></div>`).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    /* ==========================================
+       15. ID & DOCUMENT WALLET
+       ========================================== */
+    function renderIdWallet(ws) {
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title"><span>🪪 Smart ID & Document Wallet</span></div>
+          <select id="idType" class="input">
+            <option>National ID Card</option>
+            <option>Passport</option>
+            <option>Bank / Mobile Banking</option>
+            <option>Wi-Fi & Router Credentials</option>
+            <option>Student / Employee ID</option>
+          </select>
+          <input id="idTitle" class="input" placeholder="Document / Account Title..." />
+          <input id="idNum" class="input" placeholder="ID / Account Number..." />
+          <input id="idDet" class="input" placeholder="Extra Info (e.g. Branch, Blood Group, Expiry)..." />
+          <button class="btn btn-primary" onclick="addIdCard()">💾 Save Card</button>
+          <div style="margin-top:14px;">
+            ${db.idCards.map((c, i) => `
+              <div class="card" style="background:var(--surface-2);">
+                <div style="display:flex;justify-content:space-between;">
+                  <span class="badge badge-pin">${esc(c.type)}</span>
+                  <button class="btn btn-danger" style="padding:2px 8px;" onclick="db.idCards.splice(${i},1);saveDb();renderIdWallet(document.getElementById('workspace'))">✕</button>
+                </div>
+                <h4 style="margin:6px 0 4px;">${esc(c.title)}</h4>
+                <div style="font-family:monospace;font-size:16px;font-weight:800;color:var(--accent);">${esc(c.number)}</div>
+                <div style="font-size:12px;color:var(--text-muted);margin:4px 0 8px;">${esc(c.details || '')}</div>
+                <button class="btn" onclick="navigator.clipboard.writeText('${esc(c.number)}');showToast('Number Copied!')">📋 Copy Number</button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function addIdCard() {
+      const type = document.getElementById('idType').value;
+      const title = document.getElementById('idTitle').value.trim();
+      const number = document.getElementById('idNum').value.trim();
+      const details = document.getElementById('idDet').value.trim();
+      if (!title || !number) return;
+      db.idCards.unshift({ id: Date.now(), type, title, number, details });
+      saveDb();
+      renderIdWallet(document.getElementById('workspace'));
+    }
+
+    /* ==========================================
+       16. PASSWORD MANAGER
+       ========================================== */
+    function renderPasswordManager(ws) {
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title"><span>🔑 Password Manager</span></div>
+          <input id="pmSite" class="input" placeholder="Website / App Name..." />
+          <input id="pmUser" class="input" placeholder="Username / Email / Phone..." />
+          <div style="display:flex;gap:8px;margin-bottom:10px;">
+            <input id="pmPass" class="input" style="margin:0;" placeholder="Password..." />
+            <button class="btn" onclick="genPass()">🎲 Generate</button>
+          </div>
+          <button class="btn btn-primary" onclick="addPass()">💾 Save Password</button>
+          <div style="margin-top:12px;">
+            ${db.passwords.map((p, i) => `
+              <div class="tick-item">
+                <div style="flex:1;"><b>${esc(p.site)}</b><br><span style="font-size:12px;color:var(--text-muted);">${esc(p.user)} • <b>${esc(p.pass)}</b></span></div>
+                <button class="btn" onclick="navigator.clipboard.writeText('${esc(p.pass)}');showToast('Password Copied!')">📋</button>
+                <button class="btn btn-danger" onclick="db.passwords.splice(${i},1);saveDb();renderPasswordManager(document.getElementById('workspace'))">✕</button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function genPass() {
+      const c = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*';
+      let s = '';
+      for (let i = 0; i < 12; i++) s += c[Math.floor(Math.random() * c.length)];
+      document.getElementById('pmPass').value = s;
+    }
+
+    function addPass() {
+      const site = document.getElementById('pmSite').value.trim();
+      const user = document.getElementById('pmUser').value.trim();
+      const pass = document.getElementById('pmPass').value.trim();
+      if (!site || !pass) return;
+      db.passwords.unshift({ site, user, pass });
+      saveDb();
+      renderPasswordManager(document.getElementById('workspace'));
+    }
+
+    /* ==========================================
+       17. AUDIO VOICE RECORDER
+       ========================================== */
+    function renderVoiceRecorder(ws) {
+      ws.innerHTML = `
+        <div class="card" style="text-align:center;">
+          <div class="section-title"><span>🎙️ Audio Voice Recorder</span></div>
+          <div id="recStat" style="font-size:16px;font-weight:700;color:var(--accent);margin:14px 0;">Ready to Record</div>
+          <div class="btn-row" style="justify-content:center;">
+            <button class="btn btn-primary" onclick="startVoiceRec()">⏺️ Start Recording</button>
+            <button class="btn btn-danger" onclick="stopVoiceRec()">⏹️ Stop</button>
+          </div>
+          <audio controls style="width:100%;margin-top:12px;display:${recordedAudioUrl ? 'block' : 'none'};" src="${recordedAudioUrl || ''}"></audio>
+        </div>
+      `;
+    }
+
+    async function startVoiceRec() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = () => {
+          recordedAudioUrl = URL.createObjectURL(new Blob(audioChunks, { type: 'audio/webm' }));
+          renderVoiceRecorder(document.getElementById('workspace'));
+        };
+        mediaRecorder.start();
+        document.getElementById('recStat').textContent = '🔴 Recording in progress...';
+      } catch (e) { showToast('Microphone permission is required'); }
+    }
+
+    function stopVoiceRec() {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    }
+
+    /* ==========================================
+       18. FOCUS TIMER & STOPWATCH
+       ========================================== */
+    function renderFocusTimer(ws) {
+      ws.innerHTML = `
+        <div class="card" style="text-align:center;">
+          <div class="section-title"><span>⏱️ Focus Timer (Pomodoro)</span></div>
+          <div id="pomoTxt" style="font-size:42px;font-weight:800;color:var(--header-blue);margin:8px 0;">${fmtTime(timerSeconds)}</div>
+          <div class="btn-row" style="justify-content:center;">
+            <button class="btn btn-primary" onclick="togglePomo()">▶ Start / Pause</button>
+            <button class="btn" onclick="setPomo(1500)">25m Focus</button>
+            <button class="btn" onclick="setPomo(300)">5m Break</button>
+          </div>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div class="section-title"><span>⏱️ Stopwatch</span></div>
+          <div id="swTxt" style="font-size:38px;font-weight:800;color:var(--accent);margin:8px 0;">${fmtTime(swSeconds)}</div>
+          <div class="btn-row" style="justify-content:center;">
+            <button class="btn btn-success" onclick="toggleSw()">▶ Start / Stop</button>
+            <button class="btn" onclick="swSeconds=0;clearInterval(swInterval);swInterval=null;renderFocusTimer(document.getElementById('workspace'))">Reset</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function fmtTime(s) {
+      return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    }
+
+    function togglePomo() {
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+      else {
+        timerInterval = setInterval(() => {
+          if (timerSeconds > 0) timerSeconds--;
+          const el = document.getElementById('pomoTxt');
+          if (el) el.textContent = fmtTime(timerSeconds);
+        }, 1000);
+      }
+    }
+
+    function setPomo(s) {
+      clearInterval(timerInterval); timerInterval = null; timerSeconds = s;
+      const el = document.getElementById('pomoTxt');
+      if (el) el.textContent = fmtTime(timerSeconds);
+    }
+
+    function toggleSw() {
+      if (swInterval) { clearInterval(swInterval); swInterval = null; }
+      else {
+        swInterval = setInterval(() => {
+          swSeconds++;
+          const el = document.getElementById('swTxt');
+          if (el) el.textContent = fmtTime(swSeconds);
+        }, 1000);
+      }
+    }
+
+    /* ==========================================
+       19. DIGITAL SKETCHPAD (WITH STROKE UNDO / REDO)
+       ========================================== */
+    let skColor = '#0F172A';
+    let skSize = 3;
+    function renderSketchpad(ws) {
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title">
+            <span>🎨 Digital Sketchpad</span>
+            <div style="display:flex;gap:6px;">
+              <button class="btn" onclick="sketchUndo()">↶ Undo</button>
+              <button class="btn" onclick="sketchRedo()">↷ Redo</button>
+              <button class="btn btn-success" onclick="saveSketchNote()">💾 Save</button>
+            </div>
+          </div>
+          <canvas id="sketchPad" width="380" height="290"></canvas>
+          <div class="btn-row" style="margin-top:10px;justify-content:space-between;">
+            <div style="display:flex;gap:5px;">
+              <button class="btn" style="background:#0F172A;color:#FFF;" onclick="skColor='#0F172A';skSize=3">⚫</button>
+              <button class="btn" style="background:#2563EB;color:#FFF;" onclick="skColor='#2563EB';skSize=3">🔵</button>
+              <button class="btn" style="background:#EF4444;color:#FFF;" onclick="skColor='#EF4444';skSize=3">🔴</button>
+              <button class="btn" style="background:#10B981;color:#FFF;" onclick="skColor='#10B981';skSize=3">🟢</button>
+              <button class="btn" onclick="skColor='#FFFFFF';skSize=16">🧽 Eraser</button>
+            </div>
+            <button class="btn btn-danger" onclick="setupSketchPad()">Clear</button>
+          </div>
+        </div>
+      `;
+      setTimeout(setupSketchPad, 40);
+    }
+
+    function setupSketchPad() {
+      const c = document.getElementById('sketchPad');
+      if (!c) return;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.lineCap = 'round';
+      sketchUndoStack = [c.toDataURL()];
+      sketchRedoStack = [];
+
+      let drawing = false;
+      const getPt = (e) => {
+        const r = c.getBoundingClientRect();
+        const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+        const y = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+        return { x: x * (c.width / r.width), y: y * (c.height / r.height) };
+      };
+
+      c.onmousedown = c.ontouchstart = (e) => {
+        e.preventDefault();
+        drawing = true;
+        const p = getPt(e);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+      };
+      c.onmousemove = c.ontouchmove = (e) => {
+        if (!drawing) return;
+        e.preventDefault();
+        const p = getPt(e);
+        ctx.strokeStyle = skColor;
+        ctx.lineWidth = skSize;
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+      };
+      c.onmouseup = c.ontouchend = () => {
+        if (!drawing) return;
+        drawing = false;
+        sketchUndoStack.push(c.toDataURL());
+        sketchRedoStack = [];
       };
     }
 
-    async function downloadCompilerZip() {
-      const log = document.getElementById('cloudStatus');
-      log.style.display = 'block';
-      log.textContent = '⏳ Packaging complete Android APK project...';
+    function sketchUndo() {
+      if (sketchUndoStack.length <= 1) { showToast('Nothing more to undo'); return; }
+      sketchRedoStack.push(sketchUndoStack.pop());
+      drawDataUrlOnSketch(sketchUndoStack[sketchUndoStack.length - 1]);
+    }
 
-      const zip = new JSZip();
-      const files = getAndroidProjectFiles();
-      for (const [path, content] of Object.entries(files)) {
-        zip.file(path, content);
-      }
+    function sketchRedo() {
+      if (!sketchRedoStack.length) { showToast('Nothing more to redo'); return; }
+      const next = sketchRedoStack.pop();
+      sketchUndoStack.push(next);
+      drawDataUrlOnSketch(next);
+    }
 
-      const blob = await zip.generateAsync({ type: 'blob' });
+    function drawDataUrlOnSketch(url) {
+      const c = document.getElementById('sketchPad');
+      if (!c) return;
+      const ctx = c.getContext('2d');
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0);
+      img.src = url;
+    }
+
+    function saveSketchNote() {
+      const c = document.getElementById('sketchPad');
+      if (!c) return;
+      db.notes.unshift({
+        id: 'n_' + Date.now(),
+        type: 'SKETCH',
+        title: 'Digital Sketch',
+        content: 'Hand-drawn sketch created in 5ft NOTE.',
+        image: c.toDataURL('image/png'),
+        date: Date.now()
+      });
+      saveDb();
+      showToast('Sketch Saved to Notes!');
+      openTool('SAVED_NOTES');
+    }
+
+    /* ==========================================
+       20. HABIT & ROUTINE TRACKER (STREAKS)
+       ========================================== */
+    function renderHabitTracker(ws) {
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title"><span>🔥 Daily Habit & Routine Tracker</span></div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <input id="hbInput" class="input" style="margin:0;" placeholder="Add a new daily habit..." />
+            <button class="btn btn-primary" onclick="addHabit()">＋ Add</button>
+          </div>
+          ${db.habits.map((h, i) => `
+            <div class="tick-item">
+              <input type="checkbox" ${h.doneToday ? 'checked' : ''} onchange="toggleHabit(${i})" />
+              <span class="tick-text ${h.doneToday ? 'done' : ''}">${esc(h.name)}</span>
+              <span class="badge badge-hot">🔥 ${h.streak} Days</span>
+              <button class="btn btn-danger" style="padding:3px 8px;" onclick="db.habits.splice(${i},1);saveDb();renderHabitTracker(document.getElementById('workspace'))">✕</button>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function addHabit() {
+      const inp = document.getElementById('hbInput');
+      if (!inp.value.trim()) return;
+      db.habits.push({ id: Date.now(), name: inp.value.trim(), streak: 0, doneToday: false });
+      inp.value = '';
+      saveDb();
+      renderHabitTracker(document.getElementById('workspace'));
+    }
+
+    function toggleHabit(i) {
+      const h = db.habits[i];
+      h.doneToday = !h.doneToday;
+      h.streak = h.doneToday ? h.streak + 1 : Math.max(0, h.streak - 1);
+      saveDb();
+      renderHabitTracker(document.getElementById('workspace'));
+    }
+
+    /* ==========================================
+       21. STUDY FLASHCARDS & QUIZ
+       ========================================== */
+    function renderFlashcards(ws) {
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title"><span>🧠 Study Flashcards & Self-Quiz</span></div>
+          <input id="fcQ" class="input" placeholder="Question / Prompt..." />
+          <input id="fcA" class="input" placeholder="Answer..." />
+          <button class="btn btn-primary" onclick="addFlashcard()">＋ Add Flashcard</button>
+          <div style="margin-top:14px;">
+            ${db.flashcards.map((f, i) => `
+              <div class="card" style="background:var(--surface-2);cursor:pointer;" onclick="this.querySelector('.ans').style.display=this.querySelector('.ans').style.display==='none'?'block':'none'">
+                <div style="display:flex;justify-content:space-between;">
+                  <b>❓ ${esc(f.q)}</b>
+                  <button class="btn btn-danger" style="padding:2px 7px;" onclick="event.stopPropagation();db.flashcards.splice(${i},1);saveDb();renderFlashcards(document.getElementById('workspace'))">✕</button>
+                </div>
+                <div style="font-size:12px;color:var(--header-blue);margin-top:6px;">👁️ Tap card to reveal / hide answer</div>
+                <div class="ans" style="display:none;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);color:var(--accent);font-weight:700;">✅ ${esc(f.a)}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function addFlashcard() {
+      const q = document.getElementById('fcQ').value.trim();
+      const a = document.getElementById('fcA').value.trim();
+      if (!q || !a) return;
+      db.flashcards.unshift({ q, a });
+      saveDb();
+      renderFlashcards(document.getElementById('workspace'));
+    }
+
+    /* ==========================================
+       22. EVENT & EXAM COUNTDOWN
+       ========================================== */
+    function renderCountdown(ws) {
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title"><span>⏳ Event & Exam Countdown</span></div>
+          <input id="cdTitle" class="input" placeholder="Event / Exam Title..." />
+          <input id="cdDate" class="input" type="date" />
+          <button class="btn btn-primary" onclick="addCountdown()">＋ Add Countdown</button>
+          <div style="margin-top:14px;">
+            ${db.countdowns.map((c, i) => {
+              const diff = Math.ceil((new Date(c.date) - new Date()) / (1000 * 60 * 60 * 24));
+              return `
+                <div class="tick-item">
+                  <div style="flex:1;"><b>${esc(c.title)}</b><br><span style="font-size:12px;color:var(--text-muted);">${c.date}</span></div>
+                  <span class="badge badge-pin" style="font-size:13px;">${diff >= 0 ? diff + ' Days Left' : 'Completed'}</span>
+                  <button class="btn btn-danger" style="padding:3px 8px;" onclick="db.countdowns.splice(${i},1);saveDb();renderCountdown(document.getElementById('workspace'))">✕</button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function addCountdown() {
+      const title = document.getElementById('cdTitle').value.trim();
+      const date = document.getElementById('cdDate').value;
+      if (!title || !date) return;
+      db.countdowns.unshift({ title, date });
+      saveDb();
+      renderCountdown(document.getElementById('workspace'));
+    }
+
+    /* ==========================================
+       23. UNIT & CURRENCY CONVERTER
+       ========================================== */
+    function renderConverter(ws) {
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title"><span>🔄 Unit & Currency Converter</span></div>
+          <select id="cvType" class="input" onchange="doConvert()">
+            <option value="FT_CM">Feet (ft) ➔ Centimeters (cm)</option>
+            <option value="KG_LB">Kilograms (kg) ➔ Pounds (lb)</option>
+            <option value="KM_MI">Kilometers (km) ➔ Miles (mi)</option>
+            <option value="USD_BDT">USD ($) ➔ BDT [1 USD = 120 BDT]</option>
+            <option value="EUR_USD">EUR (€) ➔ USD ($) [1 EUR = 1.09 USD]</option>
+            <option value="C_F">Celsius (°C) ➔ Fahrenheit (°F)</option>
+          </select>
+          <input id="cvVal" class="input" type="number" value="5" oninput="doConvert()" />
+          <div id="cvOut" class="card" style="background:var(--surface-2);font-size:20px;font-weight:800;color:var(--accent);"></div>
+        </div>
+      `;
+      doConvert();
+    }
+
+    function doConvert() {
+      const t = document.getElementById('cvType')?.value;
+      const v = parseFloat(document.getElementById('cvVal')?.value) || 0;
+      let r = '';
+      if (t === 'FT_CM') r = `${v} ft = ${(v * 30.48).toFixed(2)} cm`;
+      else if (t === 'KG_LB') r = `${v} kg = ${(v * 2.20462).toFixed(2)} lb`;
+      else if (t === 'KM_MI') r = `${v} km = ${(v * 0.621371).toFixed(2)} mi`;
+      else if (t === 'USD_BDT') r = `$${v} USD = ${(v * 120).toFixed(2)} BDT`;
+      else if (t === 'EUR_USD') r = `€${v} EUR = $${(v * 1.09).toFixed(2)} USD`;
+      else if (t === 'C_F') r = `${v}°C = ${((v * 9/5) + 32).toFixed(1)}°F`;
+      const el = document.getElementById('cvOut');
+      if (el) el.textContent = r;
+    }
+
+    /* ==========================================
+       24. AGE & BMI CALCULATOR
+       ========================================== */
+    function renderAgeBmi(ws) {
+      ws.innerHTML = `
+        <div class="card">
+          <div class="section-title"><span>🎂 Exact Age Calculator</span></div>
+          <input id="dobInp" class="input" type="date" value="2002-01-01" onchange="doAge()" />
+          <div id="ageOut" style="font-size:16px;font-weight:800;color:var(--header-blue);"></div>
+        </div>
+        <div class="card">
+          <div class="section-title"><span>⚖️ BMI Health Calculator</span></div>
+          <input id="bmiW" class="input" type="number" value="65" placeholder="Weight in kg" oninput="doBmi()" />
+          <input id="bmiH" class="input" type="number" value="170" placeholder="Height in cm" oninput="doBmi()" />
+          <div id="bmiOut" style="font-size:16px;font-weight:800;color:var(--accent);"></div>
+        </div>
+      `;
+      doAge();
+      doBmi();
+    }
+
+    function doAge() {
+      const dob = new Date(document.getElementById('dobInp')?.value);
+      if (isNaN(dob)) return;
+      const now = new Date();
+      let y = now.getFullYear() - dob.getFullYear();
+      let m = now.getMonth() - dob.getMonth();
+      let d = now.getDate() - dob.getDate();
+      if (d < 0) { m--; d += 30; }
+      if (m < 0) { y--; m += 12; }
+      const el = document.getElementById('ageOut');
+      if (el) el.textContent = `Exact Age: ${y} Years, ${m} Months, ${d} Days`;
+    }
+
+    function doBmi() {
+      const w = parseFloat(document.getElementById('bmiW')?.value) || 0;
+      const h = (parseFloat(document.getElementById('bmiH')?.value) || 1) / 100;
+      const bmi = w / (h * h);
+      const st = bmi < 18.5 ? 'Underweight' : (bmi >= 25 ? 'Overweight' : 'Normal Weight');
+      const el = document.getElementById('bmiOut');
+      if (el) el.textContent = `BMI: ${bmi.toFixed(1)} (${st})`;
+    }
+
+    /* ==========================================
+       25. QR MAKER & FULL DATA BACKUP
+       ========================================== */
+    function renderQrBackup(ws) {
+      ws.innerHTML = `
+        <div class="card" style="text-align:center;">
+          <div class="section-title"><span>📱 Instant QR Code Maker</span></div>
+          <input id="qrInp" class="input" value="5ft NOTE App" placeholder="Enter URL, text or Wi-Fi info..." oninput="updateQr()" />
+          <div style="background:#FFF;padding:12px;border-radius:12px;display:inline-block;">
+            <img id="qrImg" style="width:165px;height:165px;display:block;" alt="QR Code" />
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-title"><span>💾 Full Data Backup & Restore</span></div>
+          <p style="font-size:13px;color:var(--text-muted);margin-top:0;">Export all your notes, checklists, tables, vault and settings to a local JSON file.</p>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="downloadBackup()">⬇️ Export Backup (.JSON)</button>
+            <button class="btn" onclick="document.getElementById('restoreInp').click()">📂 Restore Backup</button>
+          </div>
+          <input id="restoreInp" type="file" accept=".json" style="display:none;" onchange="restoreBackup(event)" />
+        </div>
+      `;
+      updateQr();
+    }
+
+    function updateQr() {
+      const v = encodeURIComponent(document.getElementById('qrInp')?.value || '5ft NOTE');
+      const img = document.getElementById('qrImg');
+      if (img) img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${v}`;
+    }
+
+    function downloadBackup() {
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = '5ft_Android_APK_Project.zip';
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' }));
+      a.download = '5ft_note_full_backup.json';
       a.click();
-
-      log.textContent = '✅ Downloaded 5ft_Android_APK_Project.zip!\nUpload these files to any free GitHub repository or open in AndroidIDE / Android Studio to get your signed app-debug.apk.';
     }
 
-    async function triggerCloudApkBuild() {
-      const repo = document.getElementById('ghRepo').value.trim();
-      const token = document.getElementById('ghToken').value.trim();
-      const log = document.getElementById('cloudStatus');
-      log.style.display = 'block';
-
-      if (!repo || !token) {
-        log.textContent = '⚠ Enter both your GitHub Repo (username/repo) and Personal Access Token.';
-        return;
-      }
-
-      log.textContent = '⏳ Uploading your HTML & Android source files to GitHub Cloud Compiler...';
-      const files = getAndroidProjectFiles();
-
-      try {
-        for (const [path, content] of Object.entries(files)) {
-          const url = `https://api.github.com/repos/${repo}/contents/${path}`;
-          let sha = null;
-
-          // Check if file already exists
-          const check = await fetch(url, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (check.ok) {
-            const data = await check.json();
-            sha = data.sha;
-          }
-
-          const body = {
-            message: `Build APK via 5ft App Builder`,
-            content: btoa(unescape(encodeURIComponent(content)))
-          };
-          if (sha) body.sha = sha;
-
-          const res = await fetch(url, {
-            method: 'PUT',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(body)
-          });
-
-          if (!res.ok) throw new Error(`Failed uploading ${path} (${res.status})`);
-        }
-
-        log.textContent = `✅ SUCCESS! Cloud APK Build started!\n\nOpen: https://github.com/${repo}/actions\nWait ~60 seconds for the green checkmark, and download your signed, ready-to-install .APK under "Artifacts -> 5ft-Signed-APK"!`;
-      } catch (err) {
-        log.textContent = '❌ Cloud Build Error: ' + err.message;
-      }
+    function restoreBackup(e) {
+      const f = e.target.files[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = (ev) => {
+        try {
+          db = Object.assign(db, JSON.parse(ev.target.result));
+          saveDb();
+          showToast('All Data Restored Successfully!');
+          openTool('SAVED_NOTES');
+        } catch (err) { showToast('Invalid backup file'); }
+      };
+      r.readAsText(f);
     }
+
+    function esc(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    initApp();
   </script>
 </body>
 </html>
